@@ -12,7 +12,7 @@ func init() {
 			// 默认数据库
 			"connection": config.Env("DB_CONNECTION", "mysql"),
 
-			"mysql": map[string]interface{}{
+			"mysql": map[string]any{
 
 				// 数据库连接信息
 				"host":     config.Env("DB_HOST", "127.0.0.1"),
