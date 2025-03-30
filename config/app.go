@@ -6,9 +6,9 @@ import "gohub/pkg/config"
 // init 函数在包初始化时自动执行，用于设置应用的配置信息
 func init() {
 	// 调用 config 包的 Add 方法，添加一个名为 "app" 的配置项
-	config.Add("app", func() map[string]interface{} {
+	config.Add("app", func() map[string]any {
 		// 返回一个包含应用配置信息的 map
-		return map[string]interface{}{
+		return map[string]any{
 
 			// 应用名称，从环境变量 APP_NAME 中获取，默认值为 "Gohub"
 			"name": config.Env("APP_NAME", "Gohub"),
