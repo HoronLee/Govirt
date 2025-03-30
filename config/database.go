@@ -6,8 +6,8 @@ import (
 
 func init() {
 
-	config.Add("database", func() map[string]interface{} {
-		return map[string]interface{}{
+	config.Add("database", func() map[string]any {
+		return map[string]any{
 
 			// 默认数据库
 			"connection": config.Env("DB_CONNECTION", "mysql"),

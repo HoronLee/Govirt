@@ -1,3 +1,19 @@
 # GoHub
 
 > 这是一个开发模板项目
+
+APP_ENV=local
+APP_KEY=zBqYyQrPNaIUsnRhsGtHLivjqiMjBVLS
+APP_DEBUG=true
+APP_URL=http://localhost:3000
+APP_LOG_LEVEL=debug
+APP_PORT=8000
+DB_CONNECTION=mysql
+DB_HOST=192.168.6.166
+DB_PORT=3306
+DB_DATABASE=gohub
+DB_USERNAME=gohub
+DB_PASSWORD=gohub114514
+DB_DEBUG=2
+LOG_TYPE=daily
+LOG_LEVEL=debug
