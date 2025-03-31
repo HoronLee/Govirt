@@ -48,9 +48,8 @@ func NewCaptcha() *Captcha {
 }
 
 // GenerateCaptcha 生成图片验证码
-func (c *Captcha) GenerateCaptcha() (id string, b64s string, err error) {
-	id, b64s, _, err = c.Base64Captcha.Generate()
-	return id, b64s, err
+func (c *Captcha) GenerateCaptcha() (id, b64s, answer string, err error) {
+	return c.Base64Captcha.Generate()
 }
 
 // VerifyCaptcha 验证验证码是否正确
