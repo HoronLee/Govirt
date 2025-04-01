@@ -12,6 +12,7 @@ require (
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 	github.com/mojocn/base64Captcha v1.3.8
 	github.com/spf13/cast v1.7.1
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	github.com/thedevsaddam/govalidator v1.9.10
 	gorm.io/driver/mysql v1.3.6
@@ -26,6 +27,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
