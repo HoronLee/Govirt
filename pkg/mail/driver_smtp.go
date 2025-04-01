@@ -1,9 +1,13 @@
 package mail
 
 import (
+	"crypto/tls"
 	"fmt"
 	"gohub/pkg/logger"
 	"net/smtp"
+	"strings"
+
+	configPKG "gohub/pkg/config"
 
 	emailPKG "github.com/jordan-wright/email"
 )
@@ -12,7 +16,8 @@ import (
 type SMTP struct{}
 
 // Send 实现 email.Driver interface 的 Send 方法
-func (s *SMTP) Send(email Email, config map[string]string) bool {
+// 原本返回的是bool，现在是error
+func (s *SMTP) Send(email Email, config map[string]string) error {
 
 	e := emailPKG.NewEmail()
 
@@ -25,22 +30,38 @@ func (s *SMTP) Send(email Email, config map[string]string) bool {
 	e.HTML = email.HTML
 
 	logger.DebugJSON("发送邮件", "发件详情", e)
-
-	err := e.Send(
-		fmt.Sprintf("%v:%v", config["host"], config["port"]),
-
-		smtp.PlainAuth(
-			"",
-			config["username"],
-			config["password"],
-			config["host"],
-		),
-	)
-	if err != nil {
-		logger.ErrorString("发送邮件", "发件出错", err.Error())
-		return false
+	if configPKG.GetBool("mail.smtp.tls") {
+		err := e.SendWithTLS(
+			fmt.Sprintf("%v:%v", config["host"], config["port"]),
+			smtp.PlainAuth(
+				"",
+				config["username"],
+				config["password"],
+				config["host"],
+			),
+			&tls.Config{
+				ServerName: config["host"],
+			},
+		)
+		if err != nil && !strings.Contains(err.Error(), "short response: \u0000\u0000\u0000\u001a\u0000\u0000\u0000") {
+			logger.ErrorString("发送邮件", "发件出错", err.Error())
+			return fmt.Errorf(err.Error())
+		}
+	} else {
+		err := e.Send(
+			fmt.Sprintf("%v:%v", config["host"], config["port"]),
+			smtp.PlainAuth(
+				"",
+				config["username"],
+				config["password"],
+				config["host"],
+			),
+		)
+		if err != nil {
+			logger.ErrorString("发送邮件", "发件出错", err.Error())
+			return fmt.Errorf(err.Error())
+		}
 	}
-
 	logger.DebugString("发送邮件", "发件成功", "")
-	return true
+	return nil
 }

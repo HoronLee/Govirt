@@ -13,6 +13,7 @@ func init() {
 				"port":     config.Env("MAIL_PORT", 1025),
 				"username": config.Env("MAIL_USERNAME", ""),
 				"password": config.Env("MAIL_PASSWORD", ""),
+				"tls":      config.Env("MAIL_TLS", false),
 			},
 
 			"from": map[string]any{
