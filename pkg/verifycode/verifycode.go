@@ -81,7 +81,7 @@ func (vc *VerifyCode) SendEmail(email string) error {
 		HTML:    []byte(content),
 	})
 	if err != nil {
-		return fmt.Errorf(err.Error())
+		return fmt.Errorf("error: %v", err)
 	}
 	return nil
 }
