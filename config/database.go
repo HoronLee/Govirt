@@ -28,7 +28,7 @@ func init() {
 				"max_life_seconds":     config.Env("DB_MAX_LIFE_SECONDS", 5*60),
 			},
 
-			"sqlite": map[string]interface{}{
+			"sqlite": map[string]any{
 				"database": config.Env("DB_SQL_FILE", "database/database.db"),
 			},
 		}

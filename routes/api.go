@@ -10,7 +10,6 @@ import (
 // RegisterAPIRoutes 注册网页相关路由
 func RegisterAPIRoutes(r *gin.Engine) {
 
-	// 测试一个 v1 的路由组，我们所有的 v1 版本的路由都将存放到这里
 	v1 := r.Group("/v1")
 	{
 		authGroup := v1.Group("/auth")
@@ -22,7 +21,7 @@ func RegisterAPIRoutes(r *gin.Engine) {
 			authGroup.POST("/signup/email/exist", suc.IsEmailExist)
 			// 使用 Email 注册
 			authGroup.POST("/signup/using-email", suc.SignupUsingEmail)
-			
+
 			// 发送验证码
 			vcc := new(auth.VerifyCodeController)
 			// 图片验证码，需要加限流
@@ -33,6 +32,11 @@ func RegisterAPIRoutes(r *gin.Engine) {
 			lgc := new(auth.LoginController)
 			// 使用手机号，短信验证码进行登录
 			authGroup.POST("/login/using-phone", lgc.LoginByPhone)
+			// 支持手机号，Email 和 用户名
+			authGroup.POST("/login/using-password", lgc.LoginByPassword)
+
+			// 刷新 Access Token
+			authGroup.POST("/login/refresh-token", lgc.RefreshToken)
 		}
 	}
 }

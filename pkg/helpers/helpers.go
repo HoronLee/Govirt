@@ -10,7 +10,7 @@ import (
 )
 
 // Empty 类似于 PHP 的 empty() 函数
-func Empty(val interface{}) bool {
+func Empty(val any) bool {
 	if val == nil {
 		return true
 	}
