@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	mathrand "math/rand"
 	"reflect"
 	"time"
 )
@@ -61,3 +62,18 @@ func FirstElement(args []string) string {
 	}
 	return ""
 }
+
+// RandomString 生成长度为 length 的随机字符串
+func RandomString(length int) string {
+	// 使用当前时间的 Unix 纳秒时间戳作为种子
+	seed := time.Now().UnixNano()
+	// 创建一个新的随机数生成器实例
+	rng := mathrand.New(mathrand.NewSource(seed))
+	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = letters[rng.Intn(len(letters))]
+	}
+	return string(b)
+}
+
