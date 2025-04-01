@@ -1,10 +1,17 @@
 # GoHub
 
-> 这是一个开发模板项目
+> 这是一个开发模板项目，基于[Summer大佬的Gohub教学项目](https://github.com/summerblue/gohub)
 
-没有做手机号注册的完整逻辑，只是示例，请根据自己需求修改
+## 更改部分
 
-`.env`文件示例
+- 没有做手机号注册的完整逻辑
+- 没有添加限流功能
+- 优化短信发送逻辑，支持配置文件选择TLS方式连接SMTP服务器
+
+## 配置文件示例
+
+`.env`
+
 ```env
 app_env=local
 app_key=alskdjfakjsjashbdfas
