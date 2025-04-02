@@ -2,7 +2,9 @@
 package routes
 
 import (
+	controllers "gohub/app/http/controllers/api/v1"
 	"gohub/app/http/controllers/api/v1/auth"
+	"gohub/app/http/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +16,7 @@ func RegisterAPIRoutes(r *gin.Engine) {
 	{
 		authGroup := v1.Group("/auth")
 		{
+			// 注册
 			suc := new(auth.SignupController)
 			// 判断手机是否已注册
 			authGroup.POST("/signup/phone/exist", suc.IsPhoneExist)
@@ -21,27 +24,37 @@ func RegisterAPIRoutes(r *gin.Engine) {
 			authGroup.POST("/signup/email/exist", suc.IsEmailExist)
 			// 使用 Email 注册
 			authGroup.POST("/signup/using-email", suc.SignupUsingEmail)
+			// ------------
 
-			// 发送验证码
+			// 验证码
 			vcc := new(auth.VerifyCodeController)
 			// 图片验证码，需要加限流
 			authGroup.POST("/verify-codes/captcha", vcc.ShowCaptcha)
 			// 发送邮件验证码
 			authGroup.POST("/verify-codes/email", vcc.SendUsingEmail)
+			// ------------
 
+			// 登录
 			lgc := new(auth.LoginController)
 			// 使用手机号，短信验证码进行登录
 			authGroup.POST("/login/using-phone", lgc.LoginByPhone)
-			// 支持手机号，Email 和 用户名
+			// 使用密码登录，支持手机号，Email 和 用户名
 			authGroup.POST("/login/using-password", lgc.LoginByPassword)
+			// 刷新 Access Token
+			authGroup.POST("/login/refresh-token", lgc.RefreshToken)
+			// ------------
 
-			// 重置密码
+			// 密码
 			pwc := new(auth.PasswordController)
 			// 使用 Email 重制密码
 			authGroup.POST("/password-reset/using-email", pwc.ResetByEmail)
+			// ------------
 
-			// 刷新 Access Token
-			authGroup.POST("/login/refresh-token", lgc.RefreshToken)
+			// 用户
+			uc := new(controllers.UsersController)
+			// 获取当前用户
+			v1.GET("/user", middlewares.AuthJWT(), uc.CurrentUser)
+			// ------
 		}
 	}
 }

@@ -51,7 +51,7 @@ func (lc *LoginController) LoginByPassword(c *gin.Context) {
 	user, err := auth.Attempt(request.LoginID, request.Password)
 	if err != nil {
 		// 失败，显示错误提示
-		response.Unauthorized(c, "账号不存在或密码错误")
+		response.Unauthorized(c, "登陆失败:", err.Error())
 
 	} else {
 		token := jwt.NewJWT().IssueToken(user.GetStringID(), user.Name)
