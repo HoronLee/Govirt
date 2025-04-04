@@ -19,6 +19,7 @@ _cgo_export.*
 
 # 编译文件 #
 ###################
+bin/
 *.com
 *.class
 *.dll
