@@ -1,0 +1,10 @@
+storage/
+.vscode/
+bin/
+tmp/
+.env
+.gitignore
+Dockerfile
+docker-compose.yml
+Makefile
+README.md

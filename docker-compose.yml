@@ -1,0 +1,50 @@
+services:
+  gohub:
+    image: gohub:latest
+    container_name: gohub
+    # environment:
+    #   - log_level=info
+    volumes:
+      - ./data/storage:/app/storage
+      - ./.env.docker:/app/.env
+      # - ./config:/root/.kube/config
+      # - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: mysql:latest
+    container_name: gohub_db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      - MYSQL_ROOT_PASSWORD=dbGohub
+      - MYSQL_DATABASE=gohub
+      - MYSQL_USER=gohub
+      - MYSQL_PASSWORD=dbGohubUser
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/db:/var/lib/mysql
+
+  redis:
+    image: redis:latest
+    container_name: gohub_redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --requirepass redisGohub
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data

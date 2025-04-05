@@ -10,8 +10,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o GoHub
 
 FROM alpine:latest
 
-COPY --from=builder /app/GoHub /usr/local/bin/GoHub
+WORKDIR /app
 
-RUN chmod +x /usr/local/bin/GoHub
+COPY --from=builder /app/GoHub /app/GoHub
 
-CMD ["/usr/local/bin/GoHub"]
+RUN chmod +x /app/GoHub
+
+CMD ["/app/GoHub"]
