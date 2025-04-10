@@ -14,6 +14,15 @@ func RegisterAPIRoutes(r *gin.Engine) {
 
 	v1 := r.Group("/v1")
 	{
+		akGroup := v1.Group("/api", middlewares.AuthApiKey())
+		{
+			apic := new(controllers.ApikeyController)
+			{
+				akGroup.GET("", apic.ListApikey)
+				akGroup.POST("", apic.CreateApikey)
+				akGroup.DELETE("/:name", apic.DeleteApikey)
+			}
+		}
 		authGroup := v1.Group("/auth")
 		{
 			// 注册
@@ -59,6 +68,7 @@ func RegisterAPIRoutes(r *gin.Engine) {
 				usersGroup.GET("", uc.Index)
 			}
 			// ------
+
 		}
 	}
 }

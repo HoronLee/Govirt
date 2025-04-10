@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gohub/app/cmd"
 	"gohub/app/cmd/make"
+	"gohub/app/models/apikey"
 	"gohub/bootstrap"
 	btsConig "gohub/config"
 	"gohub/pkg/config"
@@ -37,6 +38,9 @@ func main() {
 
 			// 初始化数据库
 			bootstrap.SetupDB()
+
+			// 初始化 apikey
+			apikey.InitApikey()
 
 			// 初始化 Redis
 			bootstrap.SetupRedis()
