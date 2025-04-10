@@ -41,19 +41,12 @@ func main() {
 
 			// 初始化 apikey
 			apikey.InitApikey()
-
-			// 初始化 Redis
-			bootstrap.SetupRedis()
-
-			// 初始化缓存
 		},
 	}
 
 	// 注册子命令
 	rootCmd.AddCommand(
 		cmd.CmdServe,
-		cmd.CmdKey,
-		cmd.CmdPlay,
 		make.CmdMake,
 	)
 
