@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"gohub/app/cmd"
 	"gohub/app/cmd/make"
-	"gohub/app/models/apikey"
 	"gohub/bootstrap"
 	btsConig "gohub/config"
+	"gohub/pkg/apikey"
 	"gohub/pkg/config"
 	"gohub/pkg/console"
+	"gohub/pkg/libvirt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -41,6 +42,9 @@ func main() {
 
 			// 初始化 apikey
 			apikey.InitApikey()
+
+			// 初始化libvirt
+			libvirt.InitLibvirt()
 		},
 	}
 

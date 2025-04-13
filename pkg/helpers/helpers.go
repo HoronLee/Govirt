@@ -77,3 +77,10 @@ func RandomString(length int) string {
 	return string(b)
 }
 
+// 将数值转换为标准版本格式
+func ToStandardVersion(v uint64) string {
+	major := v / 1000000
+	minor := (v % 1000000) / 1000
+	release := v % 1000
+	return fmt.Sprintf("%d.%d.%d", major, minor, release)
+}
