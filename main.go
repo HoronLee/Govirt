@@ -6,10 +6,8 @@ import (
 	"gohub/app/cmd/make"
 	"gohub/bootstrap"
 	btsConig "gohub/config"
-	"gohub/pkg/apikey"
 	"gohub/pkg/config"
 	"gohub/pkg/console"
-	"gohub/pkg/libvirt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -30,21 +28,16 @@ func main() {
 
 		// rootCmd 的所有子命令都会执行以下代码
 		PersistentPreRun: func(command *cobra.Command, args []string) {
-
 			// 配置初始化，依赖命令行 --env 参数
 			config.InitConfig(cmd.Env)
-
 			// 初始化 Logger
 			bootstrap.SetupLogger()
-
 			// 初始化数据库
 			bootstrap.SetupDB()
-
 			// 初始化 apikey
-			apikey.InitApikey()
-
+			bootstrap.InitApikey()
 			// 初始化libvirt
-			libvirt.InitLibvirt()
+			bootstrap.InitLibvirt()
 		},
 	}
 
