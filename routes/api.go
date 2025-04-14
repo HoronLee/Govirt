@@ -32,6 +32,7 @@ func RegisterAPIRoutes(r *gin.Engine) {
 					domainGroup.GET("/all", libc.ListAllDomains)
 					domainGroup.GET("/state", libc.GetDomainStateByUUID)
 					domainGroup.PUT("/state", libc.UpdateDomainStateByUUID)
+					domainGroup.GET("/xml", libc.GetDomainDefineXML)
 				}
 				libGroup.GET("/version", libc.GetLibVersion)
 			}

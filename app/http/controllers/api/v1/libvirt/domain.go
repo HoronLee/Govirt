@@ -33,7 +33,7 @@ func (ctrl *LibvirtController) GetDomainStateByUUID(c *gin.Context) {
 func (ctrl *LibvirtController) UpdateDomainStateByUUID(c *gin.Context) {
 	uuid, err := helpers.UUIDStringToBytes(c.Query("uuid"))
 	if err != nil {
-		response.Error(c, err, "无效的UUID")
+		response.Error(c, err)
 		return
 	}
 	op := libvirt.StringToDomainOperation(c.Query("operation"))
@@ -43,4 +43,20 @@ func (ctrl *LibvirtController) UpdateDomainStateByUUID(c *gin.Context) {
 		return
 	}
 	response.Success(c)
+}
+
+// GetDomainDefineXML 获取指定域的定义XML
+func (ctrl *LibvirtController) GetDomainDefineXML(c *gin.Context) {
+	uuid, err := helpers.UUIDStringToBytes(c.Query("uuid"))
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	domain, _ := libvirt.GetDomainByUUID(uuid)
+	xml, err := libvirt.GetDomainXMLDesc(domain)
+	if err != nil {
+		response.Error(c, err, "获取域定义XML失败")
+		return
+	}
+	response.Data(c, xml)
 }

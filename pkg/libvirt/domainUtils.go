@@ -7,8 +7,10 @@ import (
 	"github.com/digitalocean/go-libvirt"
 )
 
+// DomainOperation 定义DomainOperation类型
 type DomainOperation int32
 
+// 定义DomainOperation常量
 const (
 	DomainOpStart       DomainOperation = iota + 1 // 启动
 	DomainOpShutdown                               // 正常关机
@@ -26,73 +28,40 @@ const (
 	DomainOpUnknown                                // 未知操作
 )
 
-// 操作类型到字符串的映射，将中文描述替换为英文描述
-var domainOpStrings = map[DomainOperation]string{
-	DomainOpStart:       "启动",
-	DomainOpShutdown:    "关机",
-	DomainOpForceStop:   "强制停止",
-	DomainOpReboot:      "重启",
-	DomainOpForceReboot: "强制重启",
-	DomainOpSuspend:     "暂停",
-	DomainOpResume:      "恢复",
-	DomainOpSave:        "保存",
-	DomainOpRestore:     "恢复状态",
-	DomainOpDelete:      "删除",
-	DomainOpClone:       "克隆",
-	DomainOpMigrate:     "迁移",
-	DomainOpSnapshot:    "快照",
-	DomainOpUnknown:     "未知操作",
-}
-
-func (op DomainOperation) String() string {
-	if s, ok := domainOpStrings[op]; ok {
-		return s
-	}
-	return "未知操作"
+var stringToDomainOp = map[string]DomainOperation{
+	"Start":       DomainOpStart,
+	"Shutdown":    DomainOpShutdown,
+	"ForceStop":   DomainOpForceStop,
+	"Reboot":      DomainOpReboot,
+	"ForceReboot": DomainOpForceReboot,
+	"Suspend":     DomainOpSuspend,
+	"Resume":      DomainOpResume,
+	"Save":        DomainOpSave,
+	"Restore":     DomainOpRestore,
+	"Delete":      DomainOpDelete,
+	"Clone":       DomainOpClone,
+	"Migrate":     DomainOpMigrate,
+	"Snapshot":    DomainOpSnapshot,
 }
 
 // StringToDomainOperation 将字符串转换为DomainOperation
 func StringToDomainOperation(s string) DomainOperation {
-	switch s {
-	case "Start":
-		return DomainOpStart
-	case "Shutdown":
-		return DomainOpShutdown
-	case "ForceStop":
-		return DomainOpForceStop
-	case "Reboot":
-		return DomainOpReboot
-	case "ForceReboot":
-		return DomainOpForceReboot
-	case "Suspend":
-		return DomainOpSuspend
-	case "Resume":
-		return DomainOpResume
-	case "Save":
-		return DomainOpSave
-	case "Restore":
-		return DomainOpRestore
-	case "Delete":
-		return DomainOpDelete
-	case "Clone":
-		return DomainOpClone
-	case "Migrate":
-		return DomainOpMigrate
-	case "Snapshot":
-		return DomainOpSnapshot
-	default:
-		return DomainOpUnknown
+	if op, ok := stringToDomainOp[s]; ok {
+		return op
 	}
+	return DomainOpUnknown
 }
 
 // FormatDomains 格式化域信息
 func FormatDomains(domains []libvirt.Domain) []map[string]any {
 	var formattedDomains []map[string]any
 	for _, d := range domains {
+		state, _ := GetDomainStateByUUID(d.UUID) // 使用下划线忽略错误
 		formattedDomains = append(formattedDomains, map[string]any{
-			"ID":   d.ID,
-			"Name": d.Name,
-			"UUID": helpers.UUIDBytesToString(d.UUID),
+			"ID":    d.ID,
+			"Name":  d.Name,
+			"UUID":  helpers.UUIDBytesToString(d.UUID),
+			"State": DomainStateToString(state),
 		})
 	}
 	return formattedDomains
