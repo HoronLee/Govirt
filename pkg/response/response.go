@@ -2,7 +2,7 @@
 package response
 
 import (
-	"gohub/pkg/logger"
+	"govirt/pkg/logger"
 	"net/http"
 	"strings"
 

@@ -1,7 +1,7 @@
 // Package config libvirt配置文件
 package config
 
-import "gohub/pkg/config"
+import "govirt/pkg/config"
 
 // init 函数在包初始化时自动执行，用于设置应用的配置信息
 func init() {

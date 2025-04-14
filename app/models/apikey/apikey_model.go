@@ -1,9 +1,9 @@
 package apikey
 
 import (
-	"gohub/app/models"
-	"gohub/pkg/database"
-	"gohub/pkg/hash"
+	"govirt/app/models"
+	"govirt/pkg/database"
+	"govirt/pkg/hash"
 )
 
 type Apikey struct {

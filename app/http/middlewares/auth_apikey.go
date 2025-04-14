@@ -2,9 +2,9 @@
 package middlewares
 
 import (
-	"gohub/app/models/apikey"
-	"gohub/pkg/database"
-	"gohub/pkg/response"
+	"govirt/app/models/apikey"
+	"govirt/pkg/database"
+	"govirt/pkg/response"
 	"strings"
 
 	"github.com/gin-gonic/gin"

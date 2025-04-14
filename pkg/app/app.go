@@ -3,7 +3,7 @@
 package app
 
 import (
-	"gohub/pkg/config"
+	"govirt/pkg/config"
 	"time"
 )
 

@@ -1,7 +1,7 @@
 package apikey
 
 import (
-	"gohub/pkg/database"
+	"govirt/pkg/database"
 )
 
 func GetFromID(idstr string) (apikeyModel Apikey) {

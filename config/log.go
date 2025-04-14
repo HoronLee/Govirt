@@ -1,6 +1,6 @@
 package config
 
-import "gohub/pkg/config"
+import "govirt/pkg/config"
 
 func init() {
 	config.Add("log", func() map[string]any {

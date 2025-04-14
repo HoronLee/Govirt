@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"gohub/app/cmd"
-	"gohub/app/cmd/make"
-	"gohub/bootstrap"
-	btsConig "gohub/config"
-	"gohub/pkg/config"
-	"gohub/pkg/console"
+	"govirt/app/cmd"
+	"govirt/app/cmd/make"
+	"govirt/bootstrap"
+	btsConig "govirt/config"
+	"govirt/pkg/config"
+	"govirt/pkg/console"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -22,7 +22,7 @@ func main() {
 
 	// 应用的主入口，默认调用 cmd.CmdServe 命令
 	var rootCmd = &cobra.Command{
-		Use:   "Gohub",
+		Use:   "govirt",
 		Short: "A simple forum project",
 		Long:  `Default will run "serve" command, you can use "-h" flag to see all subcommands`,
 

@@ -2,8 +2,8 @@
 package bootstrap
 
 import (
-	"gohub/app/http/middlewares"
-	"gohub/routes"
+	"govirt/app/http/middlewares"
+	"govirt/routes"
 	"net/http"
 	"strings"
 

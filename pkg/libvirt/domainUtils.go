@@ -1,8 +1,8 @@
 package libvirt
 
 import (
-	"gohub/pkg/helpers"
-	"gohub/pkg/logger"
+	"govirt/pkg/helpers"
+	"govirt/pkg/logger"
 
 	"github.com/digitalocean/go-libvirt"
 )

@@ -2,9 +2,9 @@
 package routes
 
 import (
-	ctrl "gohub/app/http/controllers/api/v1"
-	libCtrl "gohub/app/http/controllers/api/v1/libvirt"
-	"gohub/app/http/middlewares"
+	ctrl "govirt/app/http/controllers/api/v1"
+	libCtrl "govirt/app/http/controllers/api/v1/libvirt"
+	"govirt/app/http/middlewares"
 
 	"github.com/gin-gonic/gin"
 )

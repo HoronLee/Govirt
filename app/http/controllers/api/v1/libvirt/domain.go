@@ -1,9 +1,9 @@
 package libvirt
 
 import (
-	"gohub/pkg/helpers"
-	"gohub/pkg/libvirt"
-	"gohub/pkg/response"
+	"govirt/pkg/helpers"
+	"govirt/pkg/libvirt"
+	"govirt/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )

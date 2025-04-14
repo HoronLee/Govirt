@@ -1,9 +1,9 @@
 package bootstrap
 
 import (
-	"gohub/pkg/config"
-	libvirtPKG "gohub/pkg/libvirt"
-	"gohub/pkg/logger"
+	"govirt/pkg/config"
+	libvirtPKG "govirt/pkg/libvirt"
+	"govirt/pkg/logger"
 	"net/url"
 
 	"github.com/digitalocean/go-libvirt"

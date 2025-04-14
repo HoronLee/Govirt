@@ -1,5 +1,5 @@
 # 定义变量
-BINARY_NAME := GoHub
+BINARY_NAME := govirt
 SRC_DIR := .
 VERSION := $(shell git describe --tags --abbrev=0 --match 'v*')
 COMMIT := $(shell git rev-parse --short HEAD)

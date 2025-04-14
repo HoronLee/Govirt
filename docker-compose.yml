@@ -1,7 +1,7 @@
 services:
-  gohub:
-    image: gohub:latest
-    container_name: gohub
+  govirt:
+    image: govirt:latest
+    container_name: govirt
     # environment:
     #   - log_level=info
     volumes:
@@ -19,17 +19,17 @@ services:
 
   db:
     image: mysql:latest
-    container_name: gohub_db
+    container_name: govirt_db
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
     environment:
-      - MYSQL_ROOT_PASSWORD=dbGohub
-      - MYSQL_DATABASE=gohub
-      - MYSQL_USER=gohub
-      - MYSQL_PASSWORD=dbGohubUser
+      - MYSQL_ROOT_PASSWORD=dbgovirt
+      - MYSQL_DATABASE=govirt
+      - MYSQL_USER=govirt
+      - MYSQL_PASSWORD=dbgovirtUser
     ports:
       - "3306:3306"
     volumes:
@@ -37,13 +37,13 @@ services:
 
   redis:
     image: redis:latest
-    container_name: gohub_redis
+    container_name: govirt_redis
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    command: redis-server --requirepass redisGohub
+    command: redis-server --requirepass redisgovirt
     ports:
       - "6379:6379"
     volumes:

@@ -1,9 +1,9 @@
 package libvirt
 
 import (
-	v1 "gohub/app/http/controllers/api/v1"
-	"gohub/pkg/libvirt"
-	"gohub/pkg/response"
+	v1 "govirt/app/http/controllers/api/v1"
+	"govirt/pkg/libvirt"
+	"govirt/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )

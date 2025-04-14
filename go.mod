@@ -1,4 +1,4 @@
-module gohub
+module govirt
 
 go 1.23.0
 

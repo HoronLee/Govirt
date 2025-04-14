@@ -1,7 +1,7 @@
 package apikey
 
 import (
-	"gohub/pkg/hash"
+	"govirt/pkg/hash"
 
 	"gorm.io/gorm"
 )

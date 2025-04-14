@@ -1,8 +1,8 @@
 package bootstrap
 
 import (
-	"gohub/pkg/config"
-	"gohub/pkg/logger"
+	"govirt/pkg/config"
+	"govirt/pkg/logger"
 )
 
 // SetupLogger 初始化 Logger

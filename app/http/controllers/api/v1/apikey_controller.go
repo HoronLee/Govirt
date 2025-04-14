@@ -1,11 +1,11 @@
 package v1
 
 import (
-	"gohub/app/models/apikey"
-	"gohub/app/requests"
-	"gohub/pkg/database"
-	"gohub/pkg/helpers"
-	"gohub/pkg/response"
+	"govirt/app/models/apikey"
+	"govirt/app/requests"
+	"govirt/pkg/database"
+	"govirt/pkg/helpers"
+	"govirt/pkg/response"
 
 	"github.com/gin-gonic/gin"
 )

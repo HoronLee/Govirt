@@ -2,10 +2,10 @@ package bootstrap
 
 import (
 	"fmt"
-	"gohub/app/models/apikey"
-	"gohub/pkg/database"
-	"gohub/pkg/helpers"
-	"gohub/pkg/logger"
+	"govirt/app/models/apikey"
+	"govirt/pkg/database"
+	"govirt/pkg/helpers"
+	"govirt/pkg/logger"
 )
 
 // 新增初始化函数

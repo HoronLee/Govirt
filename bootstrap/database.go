@@ -3,10 +3,10 @@ package bootstrap
 import (
 	"errors"
 	"fmt"
-	"gohub/app/models/apikey"
-	"gohub/pkg/config"
-	"gohub/pkg/database"
-	"gohub/pkg/logger"
+	"govirt/app/models/apikey"
+	"govirt/pkg/config"
+	"govirt/pkg/database"
+	"govirt/pkg/logger"
 	"time"
 
 	// sqlite驱动的非cgo版本
