@@ -61,6 +61,15 @@ func Abort403(c *gin.Context, msg ...string) {
 	})
 }
 
+// Conflict 响应 409，表示请求与资源当前状态冲突
+func Conflict409(c *gin.Context, err error, msg ...string) {
+	logger.LogIf(err)
+	c.AbortWithStatusJSON(http.StatusConflict, gin.H{
+		"message": defaultMessage("请求与资源当前状态冲突", msg...),
+		"error":   err.Error(),
+	})
+}
+
 // Abort500 响应 500，未传参 msg 时使用默认消息
 func Abort500(c *gin.Context, msg ...string) {
 	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{

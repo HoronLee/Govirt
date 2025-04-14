@@ -41,15 +41,16 @@ func (ctrl *ApikeyController) CreateApikey(c *gin.Context) {
 	if ok := requests.Validate(c, &request, requests.CreateApikey); !ok {
 		return
 	}
-
+	if (&apikey.Apikey{Name: request.Name}).IsExist() {
+		response.Abort403(c, "API Key 已存在")
+		return
+	}
 	key := helpers.RandomString(64)
-
 	apikey := apikey.Apikey{
 		Name: request.Name,
 		Key:  key,
 	}
 	apikey.Create()
-
 	response.Data(c, gin.H{
 		"name": apikey.Name,
 		"key":  key,
