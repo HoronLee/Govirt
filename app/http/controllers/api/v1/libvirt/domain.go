@@ -37,12 +37,12 @@ func (ctrl *LibvirtController) UpdateDomainStateByUUID(c *gin.Context) {
 		return
 	}
 	op := libvirt.StringToDomainOperation(c.Query("operation"))
-	_, err = libvirt.UpdateDomainStateByUUID(uuid, op)
+	presentState, err := libvirt.UpdateDomainStateByUUID(uuid, op)
 	if err != nil {
 		response.Error(c, err, "更新域状态失败")
 		return
 	}
-	response.Success(c)
+	response.Data(c, libvirt.DomainStateToString(presentState))
 }
 
 // GetDomainDefineXML 获取指定域的定义XML
