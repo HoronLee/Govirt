@@ -2,31 +2,42 @@ package libvirt
 
 import (
 	"fmt"
-	"govirt/pkg/logger"
+	"net/url"
+	"sync"
 
 	"github.com/digitalocean/go-libvirt"
 )
 
-var (
-	// Libvirt 全局 libvirt 连接对象
-	Libvirt *libvirt.Libvirt
-)
-
-// 获取 libvirt 版本
-func GetLibVersion() (string, error) {
-	v, err := Libvirt.ConnectGetLibVersion()
-	if err != nil {
-		logger.FatalString("libvirt", "获取libvirt版本失败", err.Error())
-		return "", err
-	}
-	version := ToStandardVersion(v)
-	return version, nil
+// VirtConnection 自定义连接对象，扩展了libvirt.Libvirt的功能
+type VirtConnection struct {
+	*libvirt.Libvirt
 }
 
-// ToStandardVersion 将数值转换为标准版本格式
-func ToStandardVersion(v uint64) string {
-	major := v / 1000000
-	minor := (v % 1000000) / 1000
-	release := v % 1000
-	return fmt.Sprintf("%d.%d.%d", major, minor, release)
+var (
+	// connection 全局单例连接
+	connection *VirtConnection
+	connMutex  sync.Mutex
+)
+
+// InitConnection 初始化全局单例连接
+func InitConnection(uri string) error {
+	connMutex.Lock()
+	defer connMutex.Unlock()
+
+	if connection != nil {
+		return nil
+	}
+
+	parsedURI, err := url.Parse(uri)
+	if err != nil {
+		return fmt.Errorf("解析URI失败: %v", err)
+	}
+
+	lv, err := libvirt.ConnectToURI(parsedURI)
+	if err != nil {
+		return fmt.Errorf("连接失败: %v", err)
+	}
+
+	connection = &VirtConnection{lv}
+	return nil
 }

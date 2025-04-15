@@ -27,6 +27,7 @@ func RegisterAPIRoutes(r *gin.Engine) {
 		{
 			libc := new(libCtrl.LibvirtController)
 			{
+				libGroup.GET("/version", libc.GetLibVersion)
 				domainGroup := libGroup.Group("/domain")
 				{
 					domainGroup.GET("/all", libc.ListAllDomains)
@@ -34,7 +35,10 @@ func RegisterAPIRoutes(r *gin.Engine) {
 					domainGroup.PUT("/state", libc.UpdateDomainStateByUUID)
 					domainGroup.GET("/xml", libc.GetDomainDefineXML)
 				}
-				libGroup.GET("/version", libc.GetLibVersion)
+				networkGroup := libGroup.Group("/network")
+				{
+					networkGroup.GET("/all", libc.ListAllNetworks)
+				}
 			}
 		}
 	}

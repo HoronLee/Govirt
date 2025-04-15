@@ -28,6 +28,7 @@ const (
 	DomainOpUnknown                                // 未知操作
 )
 
+// stringToDomainOp 用于将字符串映射到DomainOperation
 var stringToDomainOp = map[string]DomainOperation{
 	"Start":       DomainOpStart,
 	"Shutdown":    DomainOpShutdown,
@@ -52,19 +53,23 @@ func StringToDomainOperation(s string) DomainOperation {
 	return DomainOpUnknown
 }
 
-// FormatDomains 格式化域信息
-func FormatDomains(domains []libvirt.Domain) []map[string]any {
-	var formattedDomains []map[string]any
-	for _, d := range domains {
-		state, _ := GetDomainStateByUUID(d.UUID) // 使用下划线忽略错误
-		formattedDomains = append(formattedDomains, map[string]any{
-			"ID":    d.ID,
-			"Name":  d.Name,
-			"UUID":  helpers.UUIDBytesToString(d.UUID),
-			"State": DomainStateToString(state),
-		})
+var domainStateToString = map[libvirt.DomainState]string{
+	libvirt.DomainNostate:     "Nostate",
+	libvirt.DomainRunning:     "Running",
+	libvirt.DomainBlocked:     "Blocked",
+	libvirt.DomainPaused:      "Paused",
+	libvirt.DomainShutdown:    "Shutdown",
+	libvirt.DomainShutoff:     "Shutoff",
+	libvirt.DomainCrashed:     "Crashed",
+	libvirt.DomainPmsuspended: "Pmsuspended",
+}
+
+// DomainStateToString 将DomainState数值转换为对应的字符串状态
+func DomainStateToString(state libvirt.DomainState) string {
+	if str, ok := domainStateToString[state]; ok {
+		return str
 	}
-	return formattedDomains
+	return "Unknown"
 }
 
 // GetDomainByUUID 根据 UUID 获取域
@@ -82,52 +87,17 @@ func GetDomainByUUID(uuid libvirt.UUID) (libvirt.Domain, error) {
 	return libvirt.Domain{}, nil
 }
 
-// DomainStateToString 将DomainState数值转换为对应的字符串状态
-func DomainStateToString(state libvirt.DomainState) string {
-	switch state {
-	case libvirt.DomainNostate:
-		return "Nostate"
-	case libvirt.DomainRunning:
-		return "Running"
-	case libvirt.DomainBlocked:
-		return "Blocked"
-	case libvirt.DomainPaused:
-		return "Paused"
-	case libvirt.DomainShutdown:
-		return "Shutdown"
-	case libvirt.DomainShutoff:
-		return "Shutoff"
-	case libvirt.DomainCrashed:
-		return "Crashed"
-	case libvirt.DomainPmsuspended:
-		return "Pmsuspended"
-	default:
-		return "Unknown"
+// FormatDomains 格式化域信息
+func FormatDomains(domains []libvirt.Domain) []map[string]any {
+	var formattedDomains []map[string]any
+	for _, d := range domains {
+		state, _ := GetDomainStateByUUID(d.UUID) // 使用下划线忽略错误
+		formattedDomains = append(formattedDomains, map[string]any{
+			"ID":    d.ID,
+			"Name":  d.Name,
+			"UUID":  helpers.UUIDBytesToString(d.UUID),
+			"State": DomainStateToString(state),
+		})
 	}
-}
-
-// DomainJobOperationToString 将DomainJobOperation数值转换为对应的字符串
-func DomainJobOperationToString(op libvirt.DomainJobOperation) string {
-	switch op {
-	case libvirt.DomainJobOperationStrStart:
-		return "Start"
-	case libvirt.DomainJobOperationStrSave:
-		return "Save"
-	case libvirt.DomainJobOperationStrRestore:
-		return "Restore"
-	case libvirt.DomainJobOperationStrMigrationIn:
-		return "MigrationIn"
-	case libvirt.DomainJobOperationStrMigrationOut:
-		return "MigrationOut"
-	case libvirt.DomainJobOperationStrSnapshot:
-		return "Snapshot"
-	case libvirt.DomainJobOperationStrSnapshotRevert:
-		return "SnapshotRevert"
-	case libvirt.DomainJobOperationStrDump:
-		return "Dump"
-	case libvirt.DomainJobOperationStrBackup:
-		return "Backup"
-	default:
-		return "Unknown"
-	}
+	return formattedDomains
 }

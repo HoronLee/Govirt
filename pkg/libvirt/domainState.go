@@ -10,7 +10,7 @@ import (
 // ListAllDomains 列出所有域的信息
 func ListAllDomains() ([]libvirt.Domain, error) {
 	flags := libvirt.ConnectListDomainsActive | libvirt.ConnectListDomainsInactive
-	domains, _, err := Libvirt.ConnectListAllDomains(1, flags)
+	domains, _, err := GetConnection().ConnectListAllDomains(1, flags)
 	if err != nil {
 		logger.ErrorString("libvirt", "列出所有域失败", err.Error())
 		return nil, err
@@ -21,7 +21,7 @@ func ListAllDomains() ([]libvirt.Domain, error) {
 // ListActiveDomains 列出所有活动域的信息
 func ListActiveDomains() ([]libvirt.Domain, error) {
 	flags := libvirt.ConnectListDomainsActive
-	domains, _, err := Libvirt.ConnectListAllDomains(1, flags)
+	domains, _, err := GetConnection().ConnectListAllDomains(1, flags)
 	if err != nil {
 		logger.ErrorString("libvirt", "列出所有活动域失败", err.Error())
 	}
@@ -31,7 +31,7 @@ func ListActiveDomains() ([]libvirt.Domain, error) {
 // ListInactiveDomains 列出所有非活动域的信息
 func ListInactiveDomains() ([]libvirt.Domain, error) {
 	flags := libvirt.ConnectListDomainsInactive
-	domains, _, err := Libvirt.ConnectListAllDomains(1, flags)
+	domains, _, err := GetConnection().ConnectListAllDomains(1, flags)
 	if err != nil {
 		logger.ErrorString("libvirt", "列出所有非活动域失败", err.Error())
 	}
@@ -40,7 +40,7 @@ func ListInactiveDomains() ([]libvirt.Domain, error) {
 
 // GetDomainState 获取指定域的状态
 func GetDomainState(domain libvirt.Domain) (libvirt.DomainState, error) {
-	state, _, err := Libvirt.DomainGetState(domain, 0)
+	state, _, err := GetConnection().DomainGetState(domain, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "获取域状态失败", err.Error())
 		return libvirt.DomainState(state), err
@@ -54,7 +54,7 @@ func GetDomainStateByUUID(uuid libvirt.UUID) (libvirt.DomainState, error) {
 	if err != nil {
 		return libvirt.DomainState(0), err
 	}
-	state, _, err := Libvirt.DomainGetState(domain, 0)
+	state, _, err := GetConnection().DomainGetState(domain, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "获取域状态失败", err.Error())
 		return libvirt.DomainState(state), err
@@ -128,7 +128,7 @@ func UpdateDomainStateByUUID(uuid libvirt.UUID, op DomainOperation) (libvirt.Dom
 
 // StartDomain 开机
 func StartDomain(domain libvirt.Domain) error {
-	err := Libvirt.DomainCreate(domain)
+	err := GetConnection().DomainCreate(domain)
 	if err != nil {
 		logger.ErrorString("libvirt", "启动域失败", err.Error())
 		return err
@@ -138,7 +138,7 @@ func StartDomain(domain libvirt.Domain) error {
 
 // ShutdownDomain 正常关机
 func ShutdownDomain(domain libvirt.Domain) error {
-	err := Libvirt.DomainShutdownFlags(domain, libvirt.DomainShutdownDefault)
+	err := GetConnection().DomainShutdownFlags(domain, libvirt.DomainShutdownDefault)
 	if err != nil {
 		logger.ErrorString("libvirt", "关闭域失败", err.Error())
 		return err
@@ -148,7 +148,7 @@ func ShutdownDomain(domain libvirt.Domain) error {
 
 // ForceStopDomain 强制关机
 func ForceStopDomain(domain libvirt.Domain) error {
-	err := Libvirt.DomainDestroyFlags(domain, libvirt.DomainDestroyDefault)
+	err := GetConnection().DomainDestroyFlags(domain, libvirt.DomainDestroyDefault)
 	if err != nil {
 		logger.ErrorString("libvirt", "强制停止域失败", err.Error())
 		return err
@@ -158,7 +158,7 @@ func ForceStopDomain(domain libvirt.Domain) error {
 
 // SuspendDomain 暂停
 func SuspendDomain(domain libvirt.Domain) error {
-	err := Libvirt.DomainSuspend(domain)
+	err := GetConnection().DomainSuspend(domain)
 	if err != nil {
 		logger.ErrorString("libvirt", "暂停域失败", err.Error())
 		return err
@@ -168,7 +168,7 @@ func SuspendDomain(domain libvirt.Domain) error {
 
 // ResumeDomain 恢复
 func ResumeDomain(domain libvirt.Domain) error {
-	err := Libvirt.DomainResume(domain)
+	err := GetConnection().DomainResume(domain)
 	if err != nil {
 		logger.ErrorString("libvirt", "恢复域失败", err.Error())
 		return err
@@ -196,7 +196,7 @@ func ForceRebootDomain(domain libvirt.Domain) error {
 func SaveDomain(domain libvirt.Domain) error {
 	// 自动生成保存路径：/var/lib/libvirt/save/<domain-name>.save
 	savePath := fmt.Sprintf("/var/lib/libvirt/save/%s.save", domain.Name)
-	err := Libvirt.DomainSave(domain, savePath)
+	err := GetConnection().DomainSave(domain, savePath)
 	if err != nil {
 		logger.ErrorString("libvirt", "保存域状态失败", err.Error())
 		return err
@@ -212,7 +212,7 @@ func DeleteDomain(domain libvirt.Domain, flags libvirt.DomainUndefineFlagsValues
 		flags = libvirt.DomainUndefineSnapshotsMetadata | libvirt.DomainUndefineNvram
 	}
 
-	err := Libvirt.DomainUndefineFlags(domain, flags)
+	err := GetConnection().DomainUndefineFlags(domain, flags)
 	if err != nil {
 		logger.ErrorString("libvirt", "删除域失败", err.Error())
 		return err
