@@ -22,13 +22,10 @@ func SetupGRPCServer() error {
 		return fmt.Errorf("无法启动监听器: %w", err)
 	}
 	logger.InfoString("gRPC", "listen", "监听地址: "+address+":"+port)
-
 	// 创建 gRPC 服务器
 	grpcServer := grpc.NewServer()
-
 	// 注册服务
 	rpc.RegisterService(grpcServer)
-
 	// 启动 gRPC 服务
 	logger.InfoString("gRPC", "启动", "gRPC 服务已启动")
 	if err := grpcServer.Serve(listener); err != nil {

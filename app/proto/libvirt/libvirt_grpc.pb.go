@@ -4,7 +4,7 @@
 // - protoc             v6.30.1
 // source: libvirt/libvirt.proto
 
-package libvirt
+package libvirtPb
 
 import (
 	context "context"
@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	LibvirtService_GetLibVersion_FullMethodName = "/libvirt.LibvirtService/GetLibVersion"
+	LibvirtService_GetLibVersion_FullMethodName  = "/libvirt.LibvirtService/GetLibVersion"
+	LibvirtService_GetLibvirtInfo_FullMethodName = "/libvirt.LibvirtService/GetLibvirtInfo"
 )
 
 // LibvirtServiceClient is the client API for LibvirtService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LibvirtServiceClient interface {
 	GetLibVersion(ctx context.Context, in *GetLibVersionRequest, opts ...grpc.CallOption) (*GetLibVersionResponse, error)
+	GetLibvirtInfo(ctx context.Context, in *GetLibvirtInfoRequest, opts ...grpc.CallOption) (*GetLibvirtInfoResponse, error)
 }
 
 type libvirtServiceClient struct {
@@ -47,11 +49,22 @@ func (c *libvirtServiceClient) GetLibVersion(ctx context.Context, in *GetLibVers
 	return out, nil
 }
 
+func (c *libvirtServiceClient) GetLibvirtInfo(ctx context.Context, in *GetLibvirtInfoRequest, opts ...grpc.CallOption) (*GetLibvirtInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetLibvirtInfoResponse)
+	err := c.cc.Invoke(ctx, LibvirtService_GetLibvirtInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LibvirtServiceServer is the server API for LibvirtService service.
 // All implementations must embed UnimplementedLibvirtServiceServer
 // for forward compatibility.
 type LibvirtServiceServer interface {
 	GetLibVersion(context.Context, *GetLibVersionRequest) (*GetLibVersionResponse, error)
+	GetLibvirtInfo(context.Context, *GetLibvirtInfoRequest) (*GetLibvirtInfoResponse, error)
 	mustEmbedUnimplementedLibvirtServiceServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedLibvirtServiceServer struct{}
 
 func (UnimplementedLibvirtServiceServer) GetLibVersion(context.Context, *GetLibVersionRequest) (*GetLibVersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLibVersion not implemented")
+}
+func (UnimplementedLibvirtServiceServer) GetLibvirtInfo(context.Context, *GetLibvirtInfoRequest) (*GetLibvirtInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLibvirtInfo not implemented")
 }
 func (UnimplementedLibvirtServiceServer) mustEmbedUnimplementedLibvirtServiceServer() {}
 func (UnimplementedLibvirtServiceServer) testEmbeddedByValue()                        {}
@@ -104,6 +120,24 @@ func _LibvirtService_GetLibVersion_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LibvirtService_GetLibvirtInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLibvirtInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LibvirtServiceServer).GetLibvirtInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LibvirtService_GetLibvirtInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LibvirtServiceServer).GetLibvirtInfo(ctx, req.(*GetLibvirtInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LibvirtService_ServiceDesc is the grpc.ServiceDesc for LibvirtService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var LibvirtService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLibVersion",
 			Handler:    _LibvirtService_GetLibVersion_Handler,
+		},
+		{
+			MethodName: "GetLibvirtInfo",
+			Handler:    _LibvirtService_GetLibvirtInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

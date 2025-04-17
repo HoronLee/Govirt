@@ -2,10 +2,37 @@ syntax = "proto3";
 
 package domain;
 
-option go_package = "govirt/app/proto/domain";
+option go_package = "govirt/app/proto/domainPb";
 
-message Domain {
-    string name = 1; // The name of the domain
-    string uuid = 2; // The UUID of the domain
-    string state = 3; // The state of the domain (e.g., running, shut off)
+service DomainService {
+    rpc GetDomains(GetDomainsRequest) returns (GetDomainsResponse);
+    rpc GetDomainInfo(GetDomainInfoRequest) returns (GetDomainInfoResponse);
+    rpc SetDomainState(SetDomainStateRequest) returns (SetDomainStateResponse);
+}
+
+message GetDomainsRequest {
+}
+
+message GetDomainsResponse{
+    string version = 1;
+}
+
+message GetDomainInfoRequest {
+    string uuid = 1;
+}
+
+message GetDomainInfoResponse {
+    string name = 1;
+    string uuid = 2;
+    string state = 3;
+}
+
+message SetDomainStateRequest {
+    string uuid = 1;
+    string state = 2; // "running" or "stopped"
+}
+
+message SetDomainStateResponse {
+    string uuid = 1;
+    string state = 2; // "running" or "stopped"
 }

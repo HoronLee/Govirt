@@ -54,7 +54,7 @@ dev:
 .PHONY: gen help
 
 PROTO_DIR=app/proto
-PB_DIR=app/pb
+PB_DIR=app/proto
 
 gen:
 	protoc \
