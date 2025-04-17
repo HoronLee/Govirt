@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package libvirt;
+
+option go_package = "govirt/app/proto/libvirt";
+
+service LibvirtService {
+    rpc GetLibVersion(GetLibVersionRequest) returns (GetLibVersionResponse);
+}
+
+message GetLibVersionRequest {
+}
+
+message GetLibVersionResponse {
+    string version = 1;
+}
+

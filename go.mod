@@ -8,14 +8,13 @@ require (
 	github.com/digitalocean/go-libvirt v0.0.0-20250317183548-13bf9b43b50b
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/gin-gonic/gin v1.8.1
-	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/iancoleman/strcase v0.3.0
-	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	github.com/thedevsaddam/govalidator v1.9.10
+	google.golang.org/grpc v1.67.3
 	gorm.io/driver/mysql v1.3.6
 	gorm.io/gorm v1.25.7
 )
@@ -30,10 +29,8 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
-	github.com/yuin/goldmark v1.4.13 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/tools v0.32.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241223144023-3abc09e42ca8 // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
@@ -66,7 +63,7 @@ require (
 	golang.org/x/net v0.39.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
+	google.golang.org/protobuf v1.36.1
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

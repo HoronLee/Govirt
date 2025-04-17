@@ -50,3 +50,20 @@ deps:
 dev:
 	go build -o $(OUTPUT_DIR)/$(BINARY_NAME)-dev
 	./$(OUTPUT_DIR)/$(BINARY_NAME)-dev
+
+.PHONY: gen help
+
+PROTO_DIR=app/proto
+PB_DIR=app/pb
+
+gen:
+	protoc \
+	--proto_path=$(PROTO_DIR) \
+	--go_out=$(PB_DIR) \
+	--go_opt=paths=source_relative \
+	--go-grpc_out=$(PB_DIR) \
+	--go-grpc_opt=paths=source_relative \
+	$(shell find $(PROTO_DIR) -iname "*.proto")
+
+help:
+	@echo "make gen - 生成pb及grpc代码"

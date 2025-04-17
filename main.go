@@ -23,7 +23,7 @@ func main() {
 	// 应用的主入口，默认调用 cmd.CmdServe 命令
 	var rootCmd = &cobra.Command{
 		Use:   "govirt",
-		Short: "A simple forum project",
+		Short: "A libvirt client for managing virtual machines",
 		Long:  `Default will run "serve" command, you can use "-h" flag to see all subcommands`,
 
 		// rootCmd 的所有子命令都会执行以下代码

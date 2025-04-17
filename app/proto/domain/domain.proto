@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package domain;
+
+option go_package = "govirt/app/proto/domain";
+
+message Domain {
+    string name = 1; // The name of the domain
+    string uuid = 2; // The UUID of the domain
+    string state = 3; // The state of the domain (e.g., running, shut off)
+}

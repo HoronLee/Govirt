@@ -14,10 +14,20 @@ import (
 var CmdServe = &cobra.Command{
 	Use:   "serve",
 	Short: "Start web server",
-	Run:   runWeb,
+	Run:   runApiServe,
 	Args:  cobra.NoArgs,
 }
 
+// runApiServe 启动 Web 服务器
+func runApiServe(cmd *cobra.Command, args []string) {
+	if config.GetBool("rpc.enable") {
+		runGrpc(cmd, args)
+	} else {
+		runWeb(cmd, args)
+	}
+}
+
+// runWeb 启动 Web 服务器
 func runWeb(cmd *cobra.Command, args []string) {
 
 	// 设置 gin 的运行模式，支持 debug, release, test
@@ -37,5 +47,15 @@ func runWeb(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logger.ErrorString("CMD", "serve", err.Error())
 		console.Exit("Unable to start server, error:" + err.Error())
+	}
+}
+
+// runGrpc 启动 RPC 服务器
+func runGrpc(_ *cobra.Command, _ []string) {
+	// Example: Initialize and start an RPC server (replace with actual implementation)
+	err := bootstrap.SetupGRPCServer()
+	if err != nil {
+		logger.ErrorString("CMD", "rpc", err.Error())
+		console.Exit("Unable to start RPC server, error: " + err.Error())
 	}
 }
