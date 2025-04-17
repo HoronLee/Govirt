@@ -3,10 +3,10 @@
 > libvirt控制器
 
 ## grpc
+
 https://grpc.io/docs/languages/go/quickstart/
-```
-protoc -I=proto --go_out=proto --go_opt=paths=source_relative --go-grpc_out=proto --go-grpc_opt=paths=source_relative proto/*
-```
+
+直接使用`make gen`来生成protobuf文件，目录在app/pb中
 
 ## 配置文件示例
 
@@ -30,4 +30,7 @@ db_debug=2
 
 log_type=daily
 log_level=debug
+
+CON_URI=qemu:///system
+RPC_ENABLE=true
 ```
