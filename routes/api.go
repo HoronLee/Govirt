@@ -27,7 +27,7 @@ func RegisterAPIRoutes(r *gin.Engine) {
 		{
 			libc := new(libCtrl.LibvirtController)
 			{
-				libGroup.GET("/version", libc.GetLibVersion)
+				libGroup.GET("/info", libc.GetServerInfo)
 				domainGroup := libGroup.Group("/domain")
 				{
 					domainGroup.GET("/all", libc.ListAllDomains)

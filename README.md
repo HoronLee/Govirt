@@ -32,5 +32,4 @@ log_type=daily
 log_level=debug
 
 CON_URI=qemu:///system
-RPC_ENABLE=true
 ```

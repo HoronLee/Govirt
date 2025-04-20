@@ -12,12 +12,11 @@ type LibvirtController struct {
 	v1.BaseAPIController
 }
 
-func (ctrl *LibvirtController) GetLibVersion(c *gin.Context) {
-	version, err := libvirt.GetLibVersion()
+func (ctrl *LibvirtController) GetServerInfo(c *gin.Context) {
+	info, err := libvirt.GetServerInfo()
 	if err != nil {
-		response.Error(c, err, "获取libvirt版本失败")
+		response.Error(c, err, "获取宿主机信息失败")
 		return
 	}
-	response.Data(c, version)
-
+	response.Data(c, info)
 }

@@ -6,7 +6,8 @@ import "govirt/pkg/config"
 func init() {
 	config.Add("libvirt", func() map[string]any {
 		return map[string]any{
-			"conURI": config.Env("CON_URI", "qemu:///system"),
+			"hostName": config.Env("HOST_NAME", "R430"),
+			"conURI":   config.Env("CON_URI", "qemu:///system"),
 		}
 	})
 }
