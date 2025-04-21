@@ -2,12 +2,6 @@
 
 > libvirt控制器
 
-## grpc
-
-https://grpc.io/docs/languages/go/quickstart/
-
-直接使用`make gen`来生成protobuf文件，目录在app/pb中
-
 ## 配置文件示例
 
 `.env`

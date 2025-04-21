@@ -37,7 +37,7 @@ func (ctrl *LibvirtController) UpdateDomainStateByUUID(c *gin.Context) {
 		return
 	}
 	op := libvirt.StringToDomainOperation(c.Query("operation"))
-	presentState, err := libvirt.UpdateDomainStateByUUID(uuid, op)
+	presentState, err := libvirt.UpdateDomainStateByUUID(uuid, op, 0)
 	if err != nil {
 		response.Error(c, err, "更新域状态失败")
 		return
