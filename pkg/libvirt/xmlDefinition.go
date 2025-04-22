@@ -1,5 +1,63 @@
 package libvirt
 
+const poolTemplate = `<pool type="{{.Type}}">
+  <name>{{.Name}}</name>
+  <uuid>{{.UUID}}</uuid>
+  <target>
+    <path>{{.Path}}</path>
+  </target>
+</pool>`
+
+type poolTemplateParams struct {
+	Type string // 存储池类型 dir
+	Name string // 存储池名称
+	UUID string // 存储池UUID
+	Path string // 存储池路径
+}
+
+const volumeTemplate = `<volume>
+  <name>{{.Name}}</name>
+  <capacity>{{.Capacity}}</capacity>
+  <allocation>{{.Allocation}}</allocation>
+  <target>
+    <format type="{{.Type}}"/>
+  </target>
+  <backingStore>
+    <path>{{.BackingStorePath}}</path>
+  </backingStore>
+</volume>`
+
+type volumeTemplateParams struct {
+	Name             string // 卷名称
+	Capacity         int64  // 卷容量
+	Allocation       int64  // 卷分配 0
+	Type             string // 卷格式 qcow2
+	BackingStorePath string // 卷的后备存储路径 ""
+}
+
+const networkTemplate = `<network>
+  <name>{{.Name}}</name>
+  <uuid>{{.UUID}}</uuid>
+  <forward mode="{{.ForwardMode}}"/>
+  <domain name="{{.DomainName}}"/>
+  <ip address="{{.IPAddress}}" netmask="{{.NetMask}}">
+    <dhcp>
+      <range start="{{.DhcpStart}}" end="{{.DhcpEnd}}"/>
+    </dhcp>
+  </ip>
+</network>`
+
+type networkTemplateParams struct {
+	Name        string // 网络名称
+	UUID        string // 网络UUID
+	DomainName  string // 名称
+	ForwardMode string // 转发模式
+	IPAddress   string // IP地址
+	NetMask     string // 子网掩码
+	DhcpStart   string // DHCP起始地址
+	DhcpEnd     string // DHCP结束地址
+}
+
 // domainTemplate 保存域定义的XML模板
 const domainTemplate = `<domain type="kvm">
   <name>{{.Name}}</name>
@@ -42,6 +100,8 @@ const domainTemplate = `<domain type="kvm">
         <write_iops_sec>{{.OsDiskWIOPS}}</write_iops_sec>
       </iotune> 
     </disk>
+    <!-- 数据盘是可选的 -->
+    {{if notEmpty .DataDiskSource}}
     <disk type="file" device="disk">    <!-- 数据盘 -->
       <driver name="qemu" type="qcow2" discard="unmap"/>
       <source file='{{.DataDiskSource}}'/>
@@ -54,6 +114,9 @@ const domainTemplate = `<domain type="kvm">
         <write_iops_sec>{{.DataDiskWIOPS}}</write_iops_sec>
       </iotune> 
     </disk>
+    {{end}}
+    <!-- CDROM是可选的 -->
+    {{if notEmpty .CDRomSource}}
     <disk type="file" device="cdrom">
       <driver name="qemu" type="raw"/>
       <source file='{{.CDRomSource}}'/>
@@ -62,6 +125,7 @@ const domainTemplate = `<domain type="kvm">
       <!-- boot order='2'/ --> <!-- 表示第几个启动设备 -->
       <address type="drive" controller="0" bus="0" target="0" unit="0"/>
     </disk>
+    {{end}}
     <!-- 控制器，待研究哪些是必须的，以及其中的关系 -->
     <controller type="usb" index="0" model="qemu-xhci" ports="15">
       <address type="pci" domain="0x0000" bus="0x02" slot="0x00" function="0x0"/>
@@ -94,11 +158,7 @@ const domainTemplate = `<domain type="kvm">
     </channel>
     <input type="mouse" bus="ps2"/>
     <input type="keyboard" bus="ps2"/>
-    <!-- VNC配置 -->
-    <!-- <graphics type="vnc" port="-1" autoport="yes">
-      <listen type="address"/>
-    </graphics> -->
-    <graphics type="vnc" port='{{.VncPort}}' autoport='{{.IsVncAutoPort}}' listen="0.0.0.0" passwd='{{.VncPasswd}}'>
+    <graphics type="vnc" {{if ne .VncPort "-1"}}port='{{.VncPort}}'{{else}}autoport='yes'{{end}} listen="0.0.0.0"{{if notEmpty .VncPasswd}} passwd='{{.VncPasswd}}'{{end}}>
         <listen type="address" address="0.0.0.0"/>
     </graphics>
     <audio id="1" type="none"/>
@@ -119,36 +179,36 @@ const domainTemplate = `<domain type="kvm">
 
 // DomainTemplateParams 定义了虚拟机XML模板中的所有变量
 type DomainTemplateParams struct {
-	Name        string // 虚拟机名称
-	UUID        string // 虚拟机UUID
-	MaxMem      int    // 单位KiB
-	CurrentMem  int    // 单位KiB
-	VCPU        int    // 虚拟CPU数量
-	Arch        string // 例如: "x86_64"
-	ClockOffset string // 例如: "utc"
+	Name        string `default:"vm"`
+	UUID        string // UUID，留空自动生成
+	MaxMem      int    `default:"1048576"` // 单位KiB，默认1GB
+	CurrentMem  int    `default:"1048576"` // 单位KiB，默认1GB
+	VCPU        int    `default:"1"`       // 虚拟CPU数量，默认1个
+	Arch        string `default:"x86_64"`  // 架构
+	ClockOffset string `default:"utc"`     // 时钟偏移
 
 	// 系统盘配置
-	OsDiskSource string
-	OsDiskRrate  int64 // 读取限制，字节/秒
-	OsDiskWrate  int64 // 写入限制，字节/秒
-	OsDiskRIOPS  int64 // 读取IOPS限制
-	OsDiskWIOPS  int64 // 写入IOPS限制
+	OsDiskSource string // 必须提供
+	OsDiskRrate  int64  `default:"104857600"` // 默认100MB/s
+	OsDiskWrate  int64  `default:"104857600"` // 默认100MB/s
+	OsDiskRIOPS  int64  `default:"1000"`      // 默认1000 IOPS
+	OsDiskWIOPS  int64  `default:"1000"`      // 默认1000 IOPS
 
 	// 数据盘配置
-	DataDiskSource string
-	DataDiskRrate  int64
-	DataDiskWrate  int64
-	DataDiskRIOPS  int64
-	DataDiskWIOPS  int64
+	DataDiskSource string `default:""`          // 必须提供
+	DataDiskRrate  int64  `default:"104857600"` // 默认100MB/s
+	DataDiskWrate  int64  `default:"104857600"` // 默认100MB/s
+	DataDiskRIOPS  int64  `default:"1000"`      // 默认1000 IOPS
+	DataDiskWIOPS  int64  `default:"1000"`      // 默认1000 IOPS
 
 	// CDROM配置
-	CDRomSource string
+	CDRomSource string // 不设默认值，可为空
 
 	// 网络配置
-	NatMac string
+	NatMac string // 留空自动生成
 
 	// VNC配置
-	VncPort       int
-	IsVncAutoPort bool
-	VncPasswd     string
+	VncPort       string `default:"-1"`  // 默认VNC端口
+	IsVncAutoPort string `default:"yes"` // 默认不自动分配端口
+	VncPasswd     string `default:""`    // 默认无密码
 }

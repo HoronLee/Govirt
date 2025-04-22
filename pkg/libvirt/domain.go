@@ -9,68 +9,69 @@ import (
 	"github.com/google/uuid"
 )
 
+// CreateATestDomain 创建一个测试虚拟机
+// 这是一个演示如何使用CreateDomain函数的示例
 func CreateATestDomain() {
-	NatMacAddr, err := helpers.GenerateRandomMAC()
-	if err != nil {
-		logger.ErrorString("libvirt", "生成随机MAC地址失败", err.Error())
-		return
-	}
-
 	// 创建模板参数结构体实例
+	// 只设置必要的参数，其他参数使用默认值
 	params := &DomainTemplateParams{
-		Name:        "test-vm",
-		UUID:        uuid.New().String(),
-		MaxMem:      2 * 1024 * 1024,
-		CurrentMem:  1 * 1024 * 1024,
-		VCPU:        2,
-		Arch:        "x86_64",
-		ClockOffset: "utc",
-
-		// 系统盘配置
-		OsDiskSource: "/var/lib/libvirt/images/test-vm.qcow2",
-		OsDiskRrate:  104857600,
-		OsDiskWrate:  104857600,
-		OsDiskRIOPS:  1000,
-		OsDiskWIOPS:  1000,
-
-		// 数据盘配置
-		DataDiskSource: "/var/lib/libvirt/images/test-vm-data.qcow2",
-		DataDiskRrate:  104857600,
-		DataDiskWrate:  104857600,
-		DataDiskRIOPS:  1000,
-		DataDiskWIOPS:  1000,
-
-		// CDROM配置
-		// CDRomSource: "/data/images/Rocky-9.2-x86_64-minimal.iso",
-		CDRomSource: "/data/images/Rocky-9.2-x86_64-minimal.iso",
-
-		// 网络配置
-		NatMac: NatMacAddr,
-
-		// VNC配置
-		VncPort:       5910,
-		IsVncAutoPort: false,
-		VncPasswd:     "000000",
+		Name:          "test",
+		OsDiskSource:  "/data/images/rocky9.qcow2",
+		VncPort:       "-1",
+		IsVncAutoPort: "no",
 	}
 
-	// 使用通用渲染函数
+	// 调用正式的创建方法
+	domain, err := CreateDomain(params)
+	if err != nil {
+		logger.ErrorString("libvirt", "创建测试域失败", err.Error())
+		return
+	}
+
+	fmt.Printf("测试域创建成功: %v\n", domain.Name)
+
+	// 输出完整参数，展示默认值被正确应用
+	fmt.Printf("名称: %s\n", params.Name)
+	fmt.Printf("UUID: %s\n", params.UUID)
+	fmt.Printf("内存: %d KiB\n", params.MaxMem)
+	fmt.Printf("当前内存: %d KiB\n", params.CurrentMem)
+	fmt.Printf("VCPU: %d\n", params.VCPU)
+	fmt.Printf("MAC地址: %s\n", params.NatMac)
+}
+
+// CreateDomain 根据提供的参数创建虚拟机
+// 此函数接收一个已填充好的DomainTemplateParams结构体实例，用于创建新的虚拟机
+func CreateDomain(params *DomainTemplateParams) (libvirt.Domain, error) {
+	// 为所有未设置的字段应用默认值
+	SetDefaults(params)
+
+	// 如果未提供MAC地址，则自动生成一个
+	if params.NatMac == "" {
+		macAddr, err := helpers.GenerateRandomMAC()
+		if err != nil {
+			return libvirt.Domain{}, fmt.Errorf("生成随机MAC地址失败: %w", err)
+		}
+		params.NatMac = macAddr
+	}
+
+	// 如果未提供UUID，则自动生成一个
+	if params.UUID == "" {
+		params.UUID = uuid.New().String()
+	}
+
+	// 渲染XML模板
 	xmlStr, err := RenderTemplate(domainTemplate, params)
-	// 或者使用便捷包装函数
-	// xmlStr, err := RenderDomainXML(params)
-	// 或者使用带缓存的渲染函数
-	// xmlStr, err := RenderCachedTemplate("domain", params)
+	if err != nil {
+		return libvirt.Domain{}, fmt.Errorf("渲染域XML失败: %w", err)
+	}
 
+	// 定义域
+	domain, err := connection.DomainDefineXML(xmlStr)
 	if err != nil {
-		logger.ErrorString("libvirt", "渲染DomainXml", err.Error())
-		return
+		return libvirt.Domain{}, fmt.Errorf("定义域失败: %w", err)
 	}
-	// fmt.Printf(xmlStr)
-	domain, err := DefineDomain(xmlStr)
-	if err != nil {
-		logger.ErrorString("libvirt", "定义域", err.Error())
-		return
-	}
-	fmt.Printf("Domain defined successfully: %v\n", domain)
+
+	return domain, nil
 }
 
 // GetDomainXMLDesc 获取指定域的XML描述

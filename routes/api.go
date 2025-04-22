@@ -39,6 +39,10 @@ func RegisterAPIRoutes(r *gin.Engine) {
 				{
 					networkGroup.GET("/all", libc.ListAllNetworks)
 				}
+				poolGroup := libGroup.Group("/pool")
+				{
+					poolGroup.GET("/all", libc.ListAllStoragePools)
+				}
 			}
 		}
 	}
