@@ -1,6 +1,8 @@
 package storagePool
 
 import (
+	"fmt"
+	"govirt/pkg/libvirtd"
 	"govirt/pkg/logger"
 	"govirt/pkg/xmlDefine"
 
@@ -59,4 +61,27 @@ func GetStoragePoolByName(name string) (libvirt.StoragePool, error) {
 		}
 	}
 	return libvirt.StoragePool{}, nil
+}
+
+// SetStoragePoolAutostart 设置存储池自动启动
+func SetStoragePoolAutostart(pool libvirt.StoragePool, autostart bool) error {
+	var autostartFlag int32 = 0
+	if autostart {
+		autostartFlag = 1
+	}
+
+	if err := libvirtd.Connection.StoragePoolSetAutostart(pool, autostartFlag); err != nil {
+		return fmt.Errorf("设置存储池自动启动失败: %w", err)
+	}
+	return nil
+}
+
+// GetStoragePoolAutostart 获取存储池自动启动状态
+func GetStoragePoolAutostart(pool libvirt.StoragePool) (bool, error) {
+	autostart, err := libvirtd.Connection.StoragePoolGetAutostart(pool)
+	if err != nil {
+		return false, fmt.Errorf("获取存储池自动启动状态失败: %w", err)
+	}
+
+	return autostart == 1, nil
 }

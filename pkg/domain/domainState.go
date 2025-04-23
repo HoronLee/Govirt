@@ -206,3 +206,26 @@ func DeleteDomain(domain libvirt.Domain, flags libvirt.DomainUndefineFlagsValues
 	}
 	return nil
 }
+
+// SetDomainAutostart 设置虚拟机自动启动
+func SetDomainAutostart(domain libvirt.Domain, autostart bool) error {
+	var autostartFlag int32 = 0
+	if autostart {
+		autostartFlag = 1
+	}
+
+	if err := libvirtd.Connection.DomainSetAutostart(domain, autostartFlag); err != nil {
+		return fmt.Errorf("设置虚拟机自动启动失败: %w", err)
+	}
+	return nil
+}
+
+// GetDomainAutostart 获取虚拟机自动启动状态
+func GetDomainAutostart(domain libvirt.Domain) (bool, error) {
+	autostart, err := libvirtd.Connection.DomainGetAutostart(domain)
+	if err != nil {
+		return false, fmt.Errorf("获取虚拟机自动启动状态失败: %w", err)
+	}
+
+	return autostart == 1, nil
+}

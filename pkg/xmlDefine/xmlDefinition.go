@@ -9,10 +9,11 @@ const PoolTemplate = `<pool type="{{.Type}}">
 </pool>`
 
 type PoolTemplateParams struct {
-	Type string `default:"dir"` // 存储池类型 dir
-	Name string // 存储池名称
-	UUID string // 存储池UUID
-	Path string // 存储池路径
+	Type      string `default:"dir"` // 存储池类型 dir
+	Name      string // 存储池名称
+	UUID      string // 存储池UUID
+	Autostart bool   `default:"1"` // 是否自启动
+	Path      string // 存储池路径
 }
 
 const VolumeTemplate = `<volume>
@@ -52,7 +53,8 @@ const NetworkTemplate = `<network>
 type NetworkTemplateParams struct {
 	Name        string // 网络名称
 	UUID        string // 网络UUID
-	DomainName  string // 名称
+	DomainName  string // 域名
+	Autostart   bool   `default:"1"` // 是否自启动
 	ForwardMode string // 转发模式
 	IPAddress   string // IP地址
 	NetMask     string // 子网掩码
@@ -186,6 +188,7 @@ const DomainTemplate = `<domain type="kvm">
 type DomainTemplateParams struct {
 	Name        string `default:"vm"`
 	UUID        string // UUID，留空自动生成
+	Autostart   bool   `default:"1"`       // 是否自启动，默认自启动
 	MaxMem      int    `default:"1048576"` // 单位KiB，默认1GB
 	CurrentMem  int    `default:"1048576"` // 单位KiB，默认1GB
 	VCPU        int    `default:"1"`       // 虚拟CPU数量，默认1个

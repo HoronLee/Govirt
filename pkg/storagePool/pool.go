@@ -43,7 +43,7 @@ func CreateStoragePool(params *xmlDefine.PoolTemplateParams) (libvirt.StoragePoo
 	// 渲染XML模板
 	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.PoolTemplate, params)
 	if err != nil {
-		return libvirt.StoragePool{}, fmt.Errorf("渲染域XML失败: %w", err)
+		return libvirt.StoragePool{}, fmt.Errorf("渲染XML失败: %w", err)
 	}
 
 	// 定义存储池
@@ -52,6 +52,10 @@ func CreateStoragePool(params *xmlDefine.PoolTemplateParams) (libvirt.StoragePoo
 		return libvirt.StoragePool{}, fmt.Errorf("定义存储池失败: %w", err)
 	}
 
+	// 设置自启动
+	if err := SetStoragePoolAutostart(StoragePool, params.Autostart); err != nil {
+		return libvirt.StoragePool{}, fmt.Errorf("设置自启动失败: %w", err)
+	}
 	return StoragePool, nil
 }
 

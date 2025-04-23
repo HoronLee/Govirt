@@ -12,14 +12,29 @@ func InitLibvirt() {
 	if err != nil {
 		logger.FatalString("libvirt", "初始化libvirt连接", err.Error())
 	}
+	if err := InitStoragePool(); err != nil {
+		logger.FatalString("libvirt", "初始化存储池", err.Error())
+	}
 	// domain.CreateATestDomain()
-	err = storagePool.InitSystemStoragePool(config.GetString("libvirt.pool.image.name"), config.GetString("libvirt.pool.image.path"))
-	if err != nil {
-		logger.FatalString("libvirt", "初始化镜像存储池", err.Error())
-	}
-	err = storagePool.InitSystemStoragePool(config.GetString("libvirt.pool.volume.name"), config.GetString("libvirt.pool.volume.path"))
-	if err != nil {
-		logger.FatalString("libvirt", "初始化数据存储池", err.Error())
-	}
 	logger.InfoString("libvirt", "初始化Libvirt控制器", "成功")
 }
+
+// InitStoragePool 初始化存储池
+func InitStoragePool() error {
+	pools := []struct {
+		nameKey string
+		pathKey string
+	}{
+		{"libvirt.pool.image.name", "libvirt.pool.image.path"},
+		{"libvirt.pool.volume.name", "libvirt.pool.volume.path"},
+	}
+
+	for _, pool := range pools {
+		if err := storagePool.InitSystemStoragePool(config.GetString(pool.nameKey), config.GetString(pool.pathKey)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// TODO: 初始化网络
