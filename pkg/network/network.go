@@ -28,7 +28,7 @@ func CreateNetwork(params *xmlDefine.NetworkTemplateParams) (libvirt.Network, er
 		params.UUID = uuid.New().String()
 	}
 	// 渲染XML模板
-	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.PoolTemplate, params)
+	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.NetworkTemplate, params)
 	if err != nil {
 		return libvirt.Network{}, fmt.Errorf("渲染XML失败: %w", err)
 	}
@@ -44,4 +44,12 @@ func CreateNetwork(params *xmlDefine.NetworkTemplateParams) (libvirt.Network, er
 		return libvirt.Network{}, fmt.Errorf("设置自启动失败: %w", err)
 	}
 	return network, nil
+}
+
+// StartNetwork 启动网络
+func StartNetwork(network libvirt.Network) error {
+	if err := libvirtd.Connection.NetworkCreate(network); err != nil {
+		return fmt.Errorf("启动网络失败: %w", err)
+	}
+	return nil
 }

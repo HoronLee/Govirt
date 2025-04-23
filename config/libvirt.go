@@ -20,14 +20,6 @@ func init() {
 					"path": config.Env("VOLUME_POOL_PATH", "/var/lib/libvirt/volumes"),
 				},
 			},
-			"network": map[string]any{
-				"internal": map[string]any{
-					"name": config.Env("INTERNAL_NETWORK_NAME", "internal"),
-				},
-				"external": map[string]any{
-					"name": config.Env("EXTERNAL_NETWORK_NAME", "external"),
-				},
-			},
 		}
 	})
 }

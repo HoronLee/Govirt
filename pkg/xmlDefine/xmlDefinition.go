@@ -53,11 +53,11 @@ const NetworkTemplate = `<network>
 type NetworkTemplateParams struct {
 	Name        string // 网络名称
 	UUID        string // 网络UUID
-	DomainName  string // 域名
+	DomainName  string // 域名，一般与Name相同
 	Autostart   bool   `default:"1"` // 是否自启动
-	ForwardMode string // 转发模式
+	ForwardMode string `default:"nat"`// 转发模式
 	IPAddress   string // IP地址
-	NetMask     string // 子网掩码
+	NetMask     string `default:"255.255.255.0"`// 子网掩码
 	DhcpStart   string // DHCP起始地址
 	DhcpEnd     string // DHCP结束地址
 }

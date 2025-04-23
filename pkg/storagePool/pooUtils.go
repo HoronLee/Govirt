@@ -9,25 +9,28 @@ import (
 	"github.com/digitalocean/go-libvirt"
 )
 
-// InitSystemStoragePool 初始化默认存储池
-func InitSystemStoragePool(name string, path string) error {
-	// 获取默认存储池
-	pool, err := GetStoragePoolByName(name)
-	if err != nil {
-		logger.ErrorString("libvirt", "初始化默认存储池", err.Error())
-		return err
-	}
-	if pool.Name == "" {
-		params := xmlDefine.PoolTemplateParams{
-			Name: name,
-			Path: path,
-		}
-		pool, err := CreateStoragePool(&params)
+// InitSystemStoragePool 初始化多个存储池
+func InitSystemStoragePool(params ...xmlDefine.PoolTemplateParams) error {
+	for _, param := range params {
+		// 获取存储池
+		pool, err := GetStoragePoolByName(param.Name)
 		if err != nil {
+			logger.ErrorString("libvirt", "初始化存储池", err.Error())
 			return err
 		}
-		if err := StartStoragePool(pool); err != nil {
-			return err
+
+		// 如果存储池不存在，则创建
+		if pool.Name == "" {
+			newPool, err := CreateStoragePool(&param)
+			if err != nil {
+				return fmt.Errorf("创建存储池 %s 失败: %w", param.Name, err)
+			}
+			if err := StartStoragePool(newPool); err != nil {
+				return fmt.Errorf("启动存储池 %s 失败: %w", param.Name, err)
+			}
+			logger.InfoString("libvirt", "初始化存储池", fmt.Sprintf("成功创建并启动存储池 %s", param.Name))
+		} else {
+			logger.WarnString("libvirt", "初始化存储池", fmt.Sprintf("存储池 %s 已存在", param.Name))
 		}
 	}
 	return nil

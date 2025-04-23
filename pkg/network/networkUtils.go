@@ -4,9 +4,52 @@ import (
 	"fmt"
 	"govirt/pkg/libvirtd"
 	"govirt/pkg/logger"
+	"govirt/pkg/xmlDefine"
 
 	"github.com/digitalocean/go-libvirt"
 )
+
+// InitSystemNetwork 初始化系统网络，支持批量初始化
+func InitSystemNetwork(params ...xmlDefine.NetworkTemplateParams) error {
+	for _, param := range params {
+		// 获取网络
+		network, err := GetNetworkByName(param.Name)
+		if err != nil {
+			logger.ErrorString("libvirt", "初始化网络", err.Error())
+			return err
+		}
+
+		// 如果网络不存在，则创建
+		if (network == libvirt.Network{}) {
+			newNetwork, err := CreateNetwork(&param)
+			if err != nil {
+				return fmt.Errorf("创建网络 %s 失败: %w", param.Name, err)
+			}
+			if err := StartNetwork(newNetwork); err != nil {
+				return fmt.Errorf("启动网络 %s 失败: %w", param.Name, err)
+			}
+			logger.WarnString("libvirt", "初始化网络", fmt.Sprintf("成功创建并启动网络 %s", param.Name))
+		} else {
+			logger.WarnString("libvirt", "初始化网络", fmt.Sprintf("网络 %s 已存在", param.Name))
+		}
+	}
+	return nil
+}
+
+// GetNetworkByName 根据名称获取存储池
+func GetNetworkByName(name string) (libvirt.Network, error) {
+	networks, err := ListAllNetworks()
+	if err != nil {
+		logger.ErrorString("libvirt", "获取所有网络", err.Error())
+		return libvirt.Network{}, err
+	}
+	for _, network := range networks {
+		if network.Name == name {
+			return network, nil
+		}
+	}
+	return libvirt.Network{}, nil
+}
 
 // GetNetworkByUUID 根据 UUID 获取网络
 func GetNetworkByUUID(uuid libvirt.UUID) (libvirt.Network, error) {

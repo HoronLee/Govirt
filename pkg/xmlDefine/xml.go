@@ -1,4 +1,4 @@
-package xml
+package xmlDefine
 
 import (
 	"encoding/xml"

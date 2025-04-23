@@ -38,7 +38,6 @@ func (ctrl *LibvirtController) CreateStartStoragePool(c *gin.Context) {
 		response.Error(c, err, "启动存储池失败")
 		return
 	}
-	// TODO: 规范输出
 	response.Created(c, helpers.FormatUUIDInStruct(pool))
 }
 
