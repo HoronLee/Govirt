@@ -1,4 +1,4 @@
-package libvirt
+package libvirtd
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ type VirtConnection struct {
 
 var (
 	// connection 全局单例连接
-	connection *VirtConnection
+	Connection *VirtConnection
 	connMutex  sync.Mutex
 )
 
@@ -24,7 +24,7 @@ func InitConnection(uri string) error {
 	connMutex.Lock()
 	defer connMutex.Unlock()
 
-	if connection != nil {
+	if Connection != nil {
 		return nil
 	}
 
@@ -38,6 +38,6 @@ func InitConnection(uri string) error {
 		return fmt.Errorf("连接失败: %v", err)
 	}
 
-	connection = &VirtConnection{lv}
+	Connection = &VirtConnection{lv}
 	return nil
 }

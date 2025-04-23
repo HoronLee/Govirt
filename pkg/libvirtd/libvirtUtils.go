@@ -1,4 +1,4 @@
-package libvirt
+package libvirtd
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ import (
 
 // GetConnection 获取全局单例连接
 func GetConnection() *VirtConnection {
-	if connection == nil {
+	if Connection == nil {
 		panic("libvirt连接未初始化，请先调用InitConnection")
 	}
-	return connection
+	return Connection
 }
 
 // CloseConnection 关闭连接
@@ -22,12 +22,12 @@ func CloseConnection() error {
 	connMutex.Lock()
 	defer connMutex.Unlock()
 
-	if connection == nil {
+	if Connection == nil {
 		return nil
 	}
 
-	err := connection.Disconnect()
-	connection = nil
+	err := Connection.Disconnect()
+	Connection = nil
 	return err
 }
 
@@ -55,7 +55,7 @@ func GetServerInfo() (*ServerInfo, error) {
 	info.HOST_NAME = config.GetString("libvirt.hostName")
 
 	// 获取版本
-	version, err := connection.ConnectGetLibVersion()
+	version, err := Connection.ConnectGetLibVersion()
 	if err != nil {
 		logger.FatalString("libvirt", "获取libvirt版本失败", err.Error())
 		return nil, err

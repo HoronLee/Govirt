@@ -9,8 +9,6 @@ import (
 	mathrand "math/rand"
 	"reflect"
 	"time"
-
-	"github.com/digitalocean/go-libvirt"
 )
 
 // Empty 类似于 PHP 的 empty() 函数
@@ -78,27 +76,4 @@ func RandomString(length int) string {
 		b[i] = letters[rng.Intn(len(letters))]
 	}
 	return string(b)
-}
-
-// UUIDBytesToString 将UUID字节数组转换为标准字符串格式
-func UUIDBytesToString(uuid libvirt.UUID) string {
-	return fmt.Sprintf("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-		uuid[0], uuid[1], uuid[2], uuid[3],
-		uuid[4], uuid[5], uuid[6], uuid[7],
-		uuid[8], uuid[9], uuid[10], uuid[11],
-		uuid[12], uuid[13], uuid[14], uuid[15])
-}
-
-// UUIDStringToBytes 将标准UUID字符串转换为字节数组
-func UUIDStringToBytes(uuidStr string) (libvirt.UUID, error) {
-	var uuid [16]byte
-	_, err := fmt.Sscanf(uuidStr, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-		&uuid[0], &uuid[1], &uuid[2], &uuid[3],
-		&uuid[4], &uuid[5], &uuid[6], &uuid[7],
-		&uuid[8], &uuid[9], &uuid[10], &uuid[11],
-		&uuid[12], &uuid[13], &uuid[14], &uuid[15])
-	if err != nil {
-		return libvirt.UUID{}, fmt.Errorf("无效的UUID格式")
-	}
-	return uuid, nil
 }

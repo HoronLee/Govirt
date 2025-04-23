@@ -1,7 +1,6 @@
-package libvirt
+package domain
 
 import (
-	"govirt/pkg/helpers"
 	"govirt/pkg/logger"
 
 	"github.com/digitalocean/go-libvirt"
@@ -85,19 +84,4 @@ func GetDomainByUUID(uuid libvirt.UUID) (libvirt.Domain, error) {
 		}
 	}
 	return libvirt.Domain{}, nil
-}
-
-// FormatDomains 格式化域信息
-func FormatDomains(domains []libvirt.Domain) []map[string]any {
-	var formattedDomains []map[string]any
-	for _, d := range domains {
-		state, _ := GetDomainStateByUUID(d.UUID) // 使用下划线忽略错误
-		formattedDomains = append(formattedDomains, map[string]any{
-			"ID":    d.ID,
-			"Name":  d.Name,
-			"UUID":  helpers.UUIDBytesToString(d.UUID),
-			"State": DomainStateToString(state),
-		})
-	}
-	return formattedDomains
 }

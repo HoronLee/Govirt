@@ -1,6 +1,6 @@
-package libvirt
+package xmlDefine
 
-const poolTemplate = `<pool type="{{.Type}}">
+const PoolTemplate = `<pool type="{{.Type}}">
   <name>{{.Name}}</name>
   <uuid>{{.UUID}}</uuid>
   <target>
@@ -8,14 +8,14 @@ const poolTemplate = `<pool type="{{.Type}}">
   </target>
 </pool>`
 
-type poolTemplateParams struct {
-	Type string // 存储池类型 dir
-	Name string // 存储池名称
+type PoolTemplateParams struct {
+	Type string `default:"dir"`  // 存储池类型 dir
+	Name string `default:"pool"` // 存储池名称
 	UUID string // 存储池UUID
 	Path string // 存储池路径
 }
 
-const volumeTemplate = `<volume>
+const VolumeTemplate = `<volume>
   <name>{{.Name}}</name>
   <capacity>{{.Capacity}}</capacity>
   <allocation>{{.Allocation}}</allocation>
@@ -27,7 +27,7 @@ const volumeTemplate = `<volume>
   </backingStore>
 </volume>`
 
-type volumeTemplateParams struct {
+type VolumeTemplateParams struct {
 	Name             string // 卷名称
 	Capacity         int64  // 卷容量
 	Allocation       int64  // 卷分配 0
@@ -35,7 +35,7 @@ type volumeTemplateParams struct {
 	BackingStorePath string // 卷的后备存储路径 ""
 }
 
-const networkTemplate = `<network>
+const NetworkTemplate = `<network>
   <name>{{.Name}}</name>
   <uuid>{{.UUID}}</uuid>
   <forward mode="{{.ForwardMode}}"/>
@@ -47,7 +47,7 @@ const networkTemplate = `<network>
   </ip>
 </network>`
 
-type networkTemplateParams struct {
+type NetworkTemplateParams struct {
 	Name        string // 网络名称
 	UUID        string // 网络UUID
 	DomainName  string // 名称
@@ -58,8 +58,8 @@ type networkTemplateParams struct {
 	DhcpEnd     string // DHCP结束地址
 }
 
-// domainTemplate 保存域定义的XML模板
-const domainTemplate = `<domain type="kvm">
+// DomainTemplate 保存域定义的XML模板
+const DomainTemplate = `<domain type="kvm">
   <name>{{.Name}}</name>
   <uuid>{{.UUID}}</uuid>
   <memory unit="KiB">{{.MaxMem}}</memory>
@@ -67,7 +67,11 @@ const domainTemplate = `<domain type="kvm">
   <vcpu placement="static">{{.VCPU}}</vcpu>
   <os>
     <type arch="{{.Arch}}" machine="pc-q35-9.2">hvm</type>
-    <boot dev="hd"/>
+    {{- if notEmpty .CDRomSource -}}
+        <boot dev="{{if notEmpty .BootDev}}{{.BootDev}}{{else}}cdrom{{end}}"/>
+    {{- else -}}
+        <boot dev="{{.BootDev}}"/>
+    {{- end -}}
   </os>
   <features>
     <acpi/>
@@ -122,7 +126,6 @@ const domainTemplate = `<domain type="kvm">
       <source file='{{.CDRomSource}}'/>
       <target dev="sda" bus="sata"/>
       <readonly/>
-      <!-- boot order='2'/ --> <!-- 表示第几个启动设备 -->
       <address type="drive" controller="0" bus="0" target="0" unit="0"/>
     </disk>
     {{end}}
@@ -186,6 +189,7 @@ type DomainTemplateParams struct {
 	VCPU        int    `default:"1"`       // 虚拟CPU数量，默认1个
 	Arch        string `default:"x86_64"`  // 架构
 	ClockOffset string `default:"utc"`     // 时钟偏移
+	BootDev     string `default:"hd"`      // 启动设备，默认硬盘启动
 
 	// 系统盘配置
 	OsDiskSource string // 必须提供
@@ -209,6 +213,6 @@ type DomainTemplateParams struct {
 
 	// VNC配置
 	VncPort       string `default:"-1"`  // 默认VNC端口
-	IsVncAutoPort string `default:"yes"` // 默认不自动分配端口
+	IsVncAutoPort string `default:"yes"` // 默认自动分配端口
 	VncPasswd     string `default:""`    // 默认无密码
 }

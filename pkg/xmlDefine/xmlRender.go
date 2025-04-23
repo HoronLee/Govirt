@@ -1,4 +1,4 @@
-package libvirt
+package xmlDefine
 
 import (
 	"bytes"
@@ -31,10 +31,10 @@ var templateFuncs = template.FuncMap{
 	// {{else}}
 	// <!-- 使用指定端口 -->
 	// {{end}}
-	"eq": func(a, b interface{}) bool {
+	"eq": func(a, b any) bool {
 		return a == b
 	},
-	"ne": func(a, b interface{}) bool {
+	"ne": func(a, b any) bool {
 		return a != b
 	},
 }
@@ -60,7 +60,7 @@ func RenderTemplate(templateStr string, data any) (string, error) {
 // 如果需要缓存已解析的模板以提高性能
 var templateCache = make(map[string]*template.Template)
 var commonTemplates = map[string]string{
-	"domain": domainTemplate,
+	"domain": DomainTemplate,
 	// "network": networkTemplate,
 	// 可以添加其他常用模板
 }
@@ -101,7 +101,7 @@ func RenderCachedTemplate(templateName string, data any) (string, error) {
 // RenderDomainXML 渲染虚拟机域定义的XML
 // 这是一个针对DomainTemplateParams的便捷包装函数
 func RenderDomainXML(params any) (string, error) {
-	return RenderTemplate(domainTemplate, params)
+	return RenderTemplate(DomainTemplate, params)
 }
 
 // SetDefaults 为结构体设置默认值

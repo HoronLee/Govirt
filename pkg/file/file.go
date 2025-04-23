@@ -21,3 +21,11 @@ func Exists(fileToCheck string) bool {
 	}
 	return true
 }
+
+// EnsureDirExists 确保目录存在，不存在则创建
+func EnsureDirExists(dirPath string) error {
+	if Exists(dirPath) {
+		return nil
+	}
+	return os.MkdirAll(dirPath, 0755)
+}

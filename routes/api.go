@@ -33,7 +33,6 @@ func RegisterAPIRoutes(r *gin.Engine) {
 					domainGroup.GET("/all", libc.ListAllDomains)
 					domainGroup.GET("/state", libc.GetDomainStateByUUID)
 					domainGroup.PUT("/state", libc.UpdateDomainStateByUUID)
-					domainGroup.GET("/xml", libc.GetDomainDefineXML)
 				}
 				networkGroup := libGroup.Group("/network")
 				{
@@ -42,6 +41,8 @@ func RegisterAPIRoutes(r *gin.Engine) {
 				poolGroup := libGroup.Group("/pool")
 				{
 					poolGroup.GET("/all", libc.ListAllStoragePools)
+					poolGroup.POST("/createStart", libc.CreateStartStoragePool)
+					poolGroup.DELETE("/stopDelete", libc.DeleteStoragePool)
 				}
 			}
 		}
