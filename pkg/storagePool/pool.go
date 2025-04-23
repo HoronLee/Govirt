@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"govirt/pkg/libvirtd"
 	"govirt/pkg/xmlDefine"
+	"os"
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/google/uuid"
@@ -26,6 +27,17 @@ func CreateStoragePool(params *xmlDefine.PoolTemplateParams) (libvirt.StoragePoo
 	// 如果未提供UUID，则自动生成一个
 	if params.UUID == "" {
 		params.UUID = uuid.New().String()
+	}
+
+	// 检查存储池目标路径是否存在，如不存在则创建
+	if params.Path != "" {
+		if _, err := os.Stat(params.Path); os.IsNotExist(err) {
+			if err := os.MkdirAll(params.Path, 0755); err != nil {
+				return libvirt.StoragePool{}, fmt.Errorf("创建存储池目标路径失败: %w", err)
+			}
+		} else if err != nil {
+			return libvirt.StoragePool{}, fmt.Errorf("检查存储池目标路径状态失败: %w", err)
+		}
 	}
 
 	// 渲染XML模板

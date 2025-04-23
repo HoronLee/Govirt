@@ -11,7 +11,7 @@ import (
 
 // ListAllDomains 列出所有域
 func (ctrl *LibvirtController) ListAllDomains(c *gin.Context) {
-	domains, err := domain.ListAllDomains()
+	domains, err := domain.ListAllDomains(1 | 2)
 	if err != nil {
 		response.Error(c, err, "列出所有域失败")
 		return

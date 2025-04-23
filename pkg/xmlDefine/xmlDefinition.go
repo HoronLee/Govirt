@@ -9,8 +9,8 @@ const PoolTemplate = `<pool type="{{.Type}}">
 </pool>`
 
 type PoolTemplateParams struct {
-	Type string `default:"dir"`  // 存储池类型 dir
-	Name string `default:"pool"` // 存储池名称
+	Type string `default:"dir"` // 存储池类型 dir
+	Name string // 存储池名称
 	UUID string // 存储池UUID
 	Path string // 存储池路径
 }
@@ -22,17 +22,19 @@ const VolumeTemplate = `<volume>
   <target>
     <format type="{{.Type}}"/>
   </target>
+  {{if notEmpty .BackingStorePath}}
   <backingStore>
     <path>{{.BackingStorePath}}</path>
   </backingStore>
+  {{end}}
 </volume>`
 
 type VolumeTemplateParams struct {
 	Name             string // 卷名称
-	Capacity         int64  // 卷容量
-	Allocation       int64  // 卷分配 0
-	Type             string // 卷格式 qcow2
-	BackingStorePath string // 卷的后备存储路径 ""
+	Capacity         int64  `default:"21474836480"` // 默认20G
+	Allocation       int64  `default:"0"`           // 默认不立刻分配卷
+	Type             string `default:"qcow2"`       // 卷格式 qcow2
+	BackingStorePath string // 卷的后备存储路径
 }
 
 const NetworkTemplate = `<network>
