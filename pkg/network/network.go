@@ -6,7 +6,6 @@ import (
 	"govirt/pkg/xmlDefine"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/google/uuid"
 )
 
 // ListAllNetworks 列出所有网络
@@ -23,10 +22,6 @@ func CreateNetwork(params *xmlDefine.NetworkTemplateParams) (libvirt.Network, er
 	// 为所有未设置的字段应用默认值
 	xmlDefine.SetDefaults(params)
 
-	// 如果未提供UUID，则自动生成一个
-	if params.UUID == "" {
-		params.UUID = uuid.New().String()
-	}
 	// 渲染XML模板
 	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.NetworkTemplate, params)
 	if err != nil {

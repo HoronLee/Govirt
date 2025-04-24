@@ -47,7 +47,7 @@ func (ctrl *LibvirtController) DeleteStoragePool(c *gin.Context) {
 		response.Error(c, err, "解析UUID失败")
 		return
 	}
-	pool, err := storagePool.GetStoragePoolByUUID(uuid)
+	pool, err := storagePool.GetStoragePool(uuid)
 	if err != nil {
 		response.Error(c, err, "获取存储池失败")
 		return

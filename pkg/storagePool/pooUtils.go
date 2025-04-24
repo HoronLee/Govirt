@@ -13,19 +13,19 @@ import (
 func InitSystemStoragePool(params ...xmlDefine.PoolTemplateParams) error {
 	for _, param := range params {
 		// 获取存储池
-		pool, err := GetStoragePoolByName(param.Name)
+		pool, err := GetStoragePool(param.Name)
 		if err != nil {
 			logger.ErrorString("libvirt", "初始化存储池", err.Error())
 			return err
 		}
 
 		// 如果存储池不存在，则创建
-		if pool.Name == "" {
-			newPool, err := CreateStoragePool(&param)
+		if (pool == libvirt.StoragePool{}) {
+			storagePool, err := CreateStoragePool(&param)
 			if err != nil {
 				return fmt.Errorf("创建存储池 %s 失败: %w", param.Name, err)
 			}
-			if err := StartStoragePool(newPool); err != nil {
+			if err := StartStoragePool(storagePool); err != nil {
 				return fmt.Errorf("启动存储池 %s 失败: %w", param.Name, err)
 			}
 			logger.InfoString("libvirt", "初始化存储池", fmt.Sprintf("成功创建并启动存储池 %s", param.Name))
@@ -36,33 +36,29 @@ func InitSystemStoragePool(params ...xmlDefine.PoolTemplateParams) error {
 	return nil
 }
 
-// GetStoragePoolByUUID 根据 UUID 获取存储池
-func GetStoragePoolByUUID(uuid libvirt.UUID) (libvirt.StoragePool, error) {
-	pools, err := ListAllStoragePools()
-	if err != nil {
-		logger.ErrorString("libvirt", "获取存储池", err.Error())
-		return libvirt.StoragePool{}, err
-	}
-	for _, domain := range pools {
-		if domain.UUID == uuid {
-			return domain, nil
-		}
-	}
-	return libvirt.StoragePool{}, nil
-}
-
-// GetStoragePoolByName 根据名称获取存储池
-func GetStoragePoolByName(name string) (libvirt.StoragePool, error) {
+// GetStoragePool 根据 UUID 或名称获取存储池
+func GetStoragePool(identifier any) (libvirt.StoragePool, error) {
 	pools, err := ListAllStoragePools()
 	if err != nil {
 		logger.ErrorString("libvirt", "获取存储池失败", err.Error())
 		return libvirt.StoragePool{}, err
 	}
-	for _, domain := range pools {
-		if domain.Name == name {
-			return domain, nil
+
+	for _, pool := range pools {
+		switch id := identifier.(type) {
+		case libvirt.UUID:
+			if pool.UUID == id {
+				return pool, nil
+			}
+		case string:
+			if pool.Name == id {
+				return pool, nil
+			}
+		default:
+			return libvirt.StoragePool{}, fmt.Errorf("无效的标识符类型: %T", identifier)
 		}
 	}
+
 	return libvirt.StoragePool{}, nil
 }
 

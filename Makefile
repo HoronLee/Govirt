@@ -4,41 +4,32 @@ SRC_DIR := .
 VERSION := $(shell git describe --tags --abbrev=0 --match 'v*')
 COMMIT := $(shell git rev-parse --short HEAD)
 EXTERNAL_VERSION ?= $(VERSION)
-GOOS ?= windows
-GOARCH ?= amd64
 OUTPUT_DIR := bin
-OUTPUT_NAME := $(BINARY_NAME)-$(EXTERNAL_VERSION)-$(GOOS)-$(GOARCH)
 
-# 如果是 Windows 平台，添加 .exe 后缀
-ifeq ($(GOOS), windows)
-    OUTPUT_NAME := $(OUTPUT_NAME).exe
-endif
+# 支持的目标平台
+PLATFORMS := windows/amd64 linux/amd64 linux/arm64 darwin/amd64 darwin/arm64
 
 # 默认目标
 .PHONY: all
-all: build
+all: $(PLATFORMS)
 
-# 构建二进制文件
-.PHONY: build
-build:
+# 构建多平台二进制文件
+.PHONY: $(PLATFORMS)
+$(PLATFORMS):
+	$(eval GOOS := $(word 1, $(subst /, ,$@)))
+	$(eval GOARCH := $(word 2, $(subst /, ,$@)))
+	$(eval OUTPUT_NAME := $(BINARY_NAME)-$(EXTERNAL_VERSION)-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS), windows),.exe))
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(OUTPUT_DIR)/$(OUTPUT_NAME) $(SRC_DIR)
-
-all:
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o $(OUTPUT_DIR)/$(BINARY_NAME)-$(EXTERNAL_VERSION)-windows-amd64.exe $(SRC_DIR)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(OUTPUT_DIR)/$(BINARY_NAME)-$(EXTERNAL_VERSION)-linux-amd64 $(SRC_DIR)
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o $(OUTPUT_DIR)/$(BINARY_NAME)-$(EXTERNAL_VERSION)-linux-arm64 $(SRC_DIR)
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o $(OUTPUT_DIR)/$(BINARY_NAME)-$(EXTERNAL_VERSION)-darwin-amd64 $(SRC_DIR)
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o $(OUTPUT_DIR)/$(BINARY_NAME)-$(EXTERNAL_VERSION)-darwin-arm64 $(SRC_DIR)
 
 # 清理构建文件
 .PHONY: clean
 clean:
-	rm -f $(OUTPUT_DIR)/$(BINARY_NAME)-*
+	rm -rf $(OUTPUT_DIR)
 
 # 运行二进制文件 (仅适用于当前平台构建)
 .PHONY: run
 run: build
-	./$(OUTPUT_DIR)/$(OUTPUT_NAME)
+	./$(OUTPUT_DIR)/$(BINARY_NAME)-$(EXTERNAL_VERSION)-$(GOOS)-$(GOARCH)$(if $(filter $(GOOS), windows),.exe)
 
 # 安装依赖
 .PHONY: deps
@@ -51,4 +42,13 @@ dev:
 	go build -o $(OUTPUT_DIR)/$(BINARY_NAME)-dev
 	./$(OUTPUT_DIR)/$(BINARY_NAME)-dev
 
-.PHONY: gen help
+# 帮助信息
+.PHONY: help
+help:
+	@echo "可用目标:"
+	@echo "  all          构建所有平台的二进制文件"
+	@echo "  clean        清理构建文件"
+	@echo "  run          运行当前平台的二进制文件"
+	@echo "  deps         安装依赖"
+	@echo "  dev          开发构建并运行"
+	@echo "  help         显示帮助信息"

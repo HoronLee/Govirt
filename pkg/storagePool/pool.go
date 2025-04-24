@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/google/uuid"
 )
 
 // ListAllStoragePools 列出所有存储池
@@ -23,11 +22,6 @@ func ListAllStoragePools() ([]libvirt.StoragePool, error) {
 // CreateStoragePool 创建存储池
 func CreateStoragePool(params *xmlDefine.PoolTemplateParams) (libvirt.StoragePool, error) {
 	xmlDefine.SetDefaults(params)
-
-	// 如果未提供UUID，则自动生成一个
-	if params.UUID == "" {
-		params.UUID = uuid.New().String()
-	}
 
 	// 检查存储池目标路径是否存在，如不存在则创建
 	if params.Path != "" {

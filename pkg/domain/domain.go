@@ -8,7 +8,6 @@ import (
 	"govirt/pkg/xmlDefine"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/google/uuid"
 )
 
 // CreateATestDomain 创建一个测试虚拟机
@@ -54,11 +53,6 @@ func CreateDomain(params *xmlDefine.DomainTemplateParams) (libvirt.Domain, error
 			return libvirt.Domain{}, fmt.Errorf("生成随机MAC地址失败: %w", err)
 		}
 		params.NatMac = macAddr
-	}
-
-	// 如果未提供UUID，则自动生成一个
-	if params.UUID == "" {
-		params.UUID = uuid.New().String()
 	}
 
 	// 渲染XML模板
