@@ -41,7 +41,6 @@ func CreateATestDomain() {
 }
 
 // CreateDomain 根据提供的参数创建虚拟机
-// 此函数接收一个已填充好的DomainTemplateParams结构体实例，用于创建新的虚拟机
 func CreateDomain(params *xmlDefine.DomainTemplateParams) (libvirt.Domain, error) {
 	// 为所有未设置的字段应用默认值
 	xmlDefine.SetDefaults(params)

@@ -3,12 +3,13 @@ package volume
 import (
 	"fmt"
 	"govirt/pkg/libvirtd"
+	"govirt/pkg/xmlDefine"
 
 	"github.com/digitalocean/go-libvirt"
 )
 
-// ListVolumes 列出存储池中的卷
-func ListVolumes(Pool libvirt.StoragePool, Maxnames int32) (rNames []string, err error) {
+// ListVolumesSummary 列出存储池中的卷 简要信息
+func ListVolumesSummary(Pool libvirt.StoragePool, Maxnames int32) (rNames []string, err error) {
 	// 刷新存储池以确保获取最新信息
 	err = libvirtd.Connection.StoragePoolRefresh(Pool, 0)
 	if err != nil {
@@ -23,8 +24,8 @@ func ListVolumes(Pool libvirt.StoragePool, Maxnames int32) (rNames []string, err
 	return volumes, nil
 }
 
-// ListVolumesDetail 列出存储池中所有的卷附带详细信息
-func ListVolumesDetail(Pool libvirt.StoragePool, NeedResults int32, Flags uint32) (vols []libvirt.StorageVol, rRet uint32, err error) {
+// ListVolumesDetail 列出存储池中所有的卷 详细信息
+func ListVolumesDetails(Pool libvirt.StoragePool, NeedResults int32, Flags uint32) (vols []libvirt.StorageVol, rRet uint32, err error) {
 	// 刷新存储池以确保获取最新信息
 	err = libvirtd.Connection.StoragePoolRefresh(Pool, 0)
 	if err != nil {
@@ -39,25 +40,22 @@ func ListVolumesDetail(Pool libvirt.StoragePool, NeedResults int32, Flags uint32
 	return volumes, rRet, nil
 }
 
-// GetVolumeInfo 获取特定卷的详细信息
-func GetVolumeInfo(l *libvirt.Libvirt, PoolName, volumeName string) (rType int8, rCapacity uint64, rAllocation uint64, err error) {
-	// 获取存储池
-	Pool, err := libvirtd.Connection.StoragePoolLookupByName(PoolName)
+// CreateVolume 创建一个新的存储卷
+func CreateVolume(Pool libvirt.StoragePool, Params *xmlDefine.VolumeTemplateParams, Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
+	// 为所有未设置的字段应用默认值
+	xmlDefine.SetDefaults(Params)
+
+	// 渲染XML模板
+	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.VolumeTemplate, Params)
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("查找存储池 %s 失败: %v", PoolName, err)
+		return libvirt.StorageVol{}, fmt.Errorf("渲染XML失败: %w", err)
 	}
 
-	// 获取存储卷
-	vol, err := libvirtd.Connection.StorageVolLookupByName(Pool, volumeName)
+	// 定义网络
+	vol, err = libvirtd.Connection.StorageVolCreateXML(Pool, xmlStr, Flags)
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("查找卷 %s 失败: %v", volumeName, err)
+		return libvirt.StorageVol{}, fmt.Errorf("定义卷失败: %w", err)
 	}
 
-	// 获取卷信息
-	rType, rCapacity, rAllocation, err = libvirtd.Connection.StorageVolGetInfo(vol)
-	if err != nil {
-		return 0, 0, 0, fmt.Errorf("获取卷 %s 信息失败: %v", volumeName, err)
-	}
-
-	return
+	return vol, nil
 }

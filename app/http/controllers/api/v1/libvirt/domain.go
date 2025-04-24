@@ -1,8 +1,11 @@
 package libvirt
 
 import (
+	"fmt"
 	"govirt/pkg/helpers"
+	"govirt/pkg/logger"
 	"govirt/pkg/response"
+	"strconv"
 
 	"govirt/pkg/domain"
 
@@ -11,7 +14,13 @@ import (
 
 // ListAllDomains 列出所有域
 func (ctrl *LibvirtController) ListAllDomains(c *gin.Context) {
-	domains, err := domain.ListAllDomains(1 | 2)
+	needResultInt, err := strconv.Atoi(c.DefaultQuery("needResults", "0"))
+	if err != nil {
+		logger.WarnString("libvirt", "ListAllDomains", fmt.Sprintf("resultNum转换失败: %s", err.Error()))
+		needResultInt = -1
+	}
+
+	domains, err := domain.ListAllDomains(int32(needResultInt), 0)
 	if err != nil {
 		response.Error(c, err, "列出所有域失败")
 		return

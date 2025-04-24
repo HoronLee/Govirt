@@ -10,7 +10,7 @@ import (
 
 // UpdateDomainStateByUUID 根据 UUID 更新域的操作状态
 func UpdateDomainStateByUUID(uuid libvirt.UUID, op DomainOperation, flags uint32) (libvirt.DomainState, error) {
-	domain, err := GetDomainByUUID(uuid)
+	domain, err := GetDomain(uuid)
 	if err != nil {
 		return libvirt.DomainNostate, err
 	}
@@ -72,8 +72,8 @@ func UpdateDomainStateByUUID(uuid libvirt.UUID, op DomainOperation, flags uint32
 }
 
 // ListAllDomains 列出所有域的信息
-func ListAllDomains(flags libvirt.ConnectListAllDomainsFlags) ([]libvirt.Domain, error) {
-	domains, _, err := libvirtd.Connection.ConnectListAllDomains(1, flags)
+func ListAllDomains(NeedResults int32, Flags libvirt.ConnectListAllDomainsFlags) ([]libvirt.Domain, error) {
+	domains, _, err := libvirtd.Connection.ConnectListAllDomains(NeedResults, Flags)
 	if err != nil {
 		logger.ErrorString("libvirt", "列出所有域失败", err.Error())
 		return nil, err
@@ -93,7 +93,7 @@ func GetDomainState(domain libvirt.Domain) (libvirt.DomainState, error) {
 
 // GetDomainStateByUUID 根据 UUID 获取域的状态
 func GetDomainStateByUUID(uuid libvirt.UUID) (libvirt.DomainState, error) {
-	domain, err := GetDomainByUUID(uuid)
+	domain, err := GetDomain(uuid)
 	if err != nil {
 		return libvirt.DomainState(0), err
 	}

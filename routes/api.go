@@ -51,8 +51,9 @@ func RegisterAPIRoutes(r *gin.Engine) {
 				// volume 相关路由
 				volumeGroup := libGroup.Group("/volume")
 				{
-					volumeGroup.GET("/all", libc.ListVolumesByPool)
+					volumeGroup.GET("/allSummary", libc.ListVolumesSummaryByPool)
 					volumeGroup.GET("/allDetail", libc.ListAllVolumesDetailsByPool)
+					volumeGroup.POST("/create", libc.CreateVolume)
 				}
 			}
 		}

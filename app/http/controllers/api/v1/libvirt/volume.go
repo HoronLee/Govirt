@@ -1,55 +1,45 @@
 package libvirt
 
 import (
-	"fmt"
-	"govirt/pkg/logger"
 	"govirt/pkg/response"
 	"govirt/pkg/storagePool"
 	"govirt/pkg/volume"
-	"strconv"
+	"govirt/pkg/xmlDefine"
 
 	"github.com/gin-gonic/gin"
 )
 
-func (ctrl *LibvirtController) ListVolumesByPool(c *gin.Context) {
-	poolName := c.Query("name")
-	needResult := c.Query("needResult")
-	pool, err := storagePool.GetStoragePool(poolName)
+func (ctrl *LibvirtController) ListVolumesSummaryByPool(c *gin.Context) {
+	identifier := c.Query("pool_identifier")
+
+	pool, err := storagePool.GetStoragePool(identifier)
 	if err != nil {
-		response.Abort500(c, err.Error())
+		response.Abort500(c, "Failed to get storage pool: "+err.Error())
 		return
-	}
-	// 将字符串转换为整数
-	resultNumInt, err := strconv.Atoi(needResult)
-	if err != nil {
-		logger.WarnString("libvirt", "ListVolumesByPool", fmt.Sprintf("resultNum转换失败: %s", err.Error()))
-		resultNumInt = 100
 	}
 
-	volumes, err := volume.ListVolumes(pool, int32(resultNumInt))
+	resultNum, err := volume.GetVolumeNum(pool)
 	if err != nil {
-		response.Abort500(c, err.Error())
+		response.Abort500(c, "Failed to get volume count: "+err.Error())
 		return
 	}
+	volumes, err := volume.ListVolumesSummary(pool, resultNum)
+	if err != nil {
+		response.Abort500(c, "Failed to list volume summaries: "+err.Error())
+		return
+	}
+
 	response.Data(c, volumes)
 }
 
 func (ctrl *LibvirtController) ListAllVolumesDetailsByPool(c *gin.Context) {
-	poolName := c.Query("name")
-	needResult := c.Query("needResult")
-	pool, err := storagePool.GetStoragePool(poolName)
+	identifier := c.Query("pool_identifier")
+	pool, err := storagePool.GetStoragePool(identifier)
 	if err != nil {
 		response.Abort500(c, err.Error())
 		return
 	}
-	// 将字符串转换为整数
-	resultNumInt, err := strconv.Atoi(needResult)
-	if err != nil {
-		logger.WarnString("libvirt", "ListVolumesByPool", fmt.Sprintf("resultNum转换失败: %s", err.Error()))
-		resultNumInt = 100
-	}
-
-	volumes, rRet, err := volume.ListVolumesDetail(pool, int32(resultNumInt), 0)
+	volumes, rRet, err := volume.ListVolumesDetails(pool, 1, 0)
 	if err != nil {
 		response.Abort500(c, err.Error())
 		return
@@ -62,4 +52,27 @@ func (ctrl *LibvirtController) ListAllVolumesDetailsByPool(c *gin.Context) {
 		RRet:    rRet,
 	}
 	response.Data(c, data)
+}
+
+// CreateVolume 创建存储卷
+func (ctrl *LibvirtController) CreateVolume(c *gin.Context) {
+	identifier := c.Query("pool_identifier")
+	pool, err := storagePool.GetStoragePool(identifier)
+	if err != nil {
+		response.Abort500(c, err.Error())
+	}
+	// 解析请求参数
+	var params xmlDefine.VolumeTemplateParams
+	if err := c.ShouldBindJSON(&params); err != nil {
+		response.Error(c, err, "解析请求参数失败")
+		return
+	}
+
+	vol, err := volume.CreateVolume(pool, &params, 0)
+	if err != nil {
+		response.Error(c, err, "创建存储卷失败")
+		return
+	}
+
+	response.Created(c, vol)
 }

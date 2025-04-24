@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"govirt/pkg/logger"
 
 	"github.com/digitalocean/go-libvirt"
@@ -71,17 +72,28 @@ func DomainStateToString(state libvirt.DomainState) string {
 	return "Unknown"
 }
 
-// GetDomainByUUID 根据 UUID 获取域
-func GetDomainByUUID(uuid libvirt.UUID) (libvirt.Domain, error) {
-	domains, err := ListAllDomains(1 | 2)
+// GetDomain 根据 UUID 或名称获取域
+func GetDomain(identifier any) (libvirt.Domain, error) {
+	domains, err := ListAllDomains(-1, 1|2)
 	if err != nil {
-		logger.ErrorString("libvirt", "获取域失败", err.Error())
+		logger.ErrorString("libvirt", "获取所有域失败", err.Error())
 		return libvirt.Domain{}, err
 	}
+
 	for _, domain := range domains {
-		if domain.UUID == uuid {
-			return domain, nil
+		switch id := identifier.(type) {
+		case libvirt.UUID:
+			if domain.UUID == id {
+				return domain, nil
+			}
+		case string:
+			if domain.Name == id {
+				return domain, nil
+			}
+		default:
+			return libvirt.Domain{}, fmt.Errorf("无效的标识符类型: %T", identifier)
 		}
 	}
+
 	return libvirt.Domain{}, nil
 }

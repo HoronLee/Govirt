@@ -1,12 +1,14 @@
 package bootstrap
 
 import (
+	"fmt"
 	"govirt/pkg/config"
 	"govirt/pkg/libvirtd"
 	"govirt/pkg/logger"
 	"govirt/pkg/network"
 	"govirt/pkg/storagePool"
 	"govirt/pkg/xmlDefine"
+	"sync"
 )
 
 func InitLibvirt() {
@@ -14,12 +16,39 @@ func InitLibvirt() {
 	if err != nil {
 		logger.FatalString("libvirt", "初始化libvirt连接", err.Error())
 	}
-	if err := InitStoragePool(); err != nil {
-		logger.FatalString("libvirt", "初始化存储池", err.Error())
+
+	// 使用WaitGroup等待所有初始化任务完成
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// 用于收集错误的channel
+	errChan := make(chan error, 2)
+
+	// 使用goroutine初始化存储池
+	go func() {
+		defer wg.Done()
+		if err := InitStoragePool(); err != nil {
+			errChan <- fmt.Errorf("初始化存储池失败: %w", err)
+		}
+	}()
+
+	// 使用goroutine初始化网络
+	go func() {
+		defer wg.Done()
+		if err := InitNetwork(); err != nil {
+			errChan <- fmt.Errorf("初始化网络失败: %w", err)
+		}
+	}()
+
+	// 等待所有goroutine完成
+	wg.Wait()
+	close(errChan)
+
+	// 检查是否有错误发生
+	for err := range errChan {
+		logger.FatalString("libvirt", err.Error(), "")
 	}
-	if err := InitNetwork(); err != nil {
-		logger.FatalString("libvirt", "初始化网络", err.Error())
-	}
+
 	logger.InfoString("libvirt", "初始化Libvirt控制器", "成功")
 }
 
