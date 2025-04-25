@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (ctrl *LibvirtController) ListVolumesSummaryByPool(c *gin.Context) {
+func (ctrl *LibvirtController) ListVolumesSummary(c *gin.Context) {
 	identifier := c.Query("pool_identifier")
 
 	pool, err := storagePool.GetStoragePool(identifier)
@@ -32,26 +32,19 @@ func (ctrl *LibvirtController) ListVolumesSummaryByPool(c *gin.Context) {
 	response.Data(c, volumes)
 }
 
-func (ctrl *LibvirtController) ListAllVolumesDetailsByPool(c *gin.Context) {
+func (ctrl *LibvirtController) ListVolumesDetails(c *gin.Context) {
 	identifier := c.Query("pool_identifier")
 	pool, err := storagePool.GetStoragePool(identifier)
 	if err != nil {
 		response.Abort500(c, err.Error())
 		return
 	}
-	volumes, rRet, err := volume.ListVolumesDetails(pool, 1, 0)
+	volumes, _, err := volume.ListVolumesDetails(pool, 0)
 	if err != nil {
 		response.Abort500(c, err.Error())
 		return
 	}
-	data := struct {
-		Volumes any    `json:"volumes"`
-		RRet    uint32 `json:"rRet"`
-	}{
-		Volumes: volumes,
-		RRet:    rRet,
-	}
-	response.Data(c, data)
+	response.Data(c, volumes)
 }
 
 // CreateVolume 创建存储卷
@@ -75,4 +68,25 @@ func (ctrl *LibvirtController) CreateVolume(c *gin.Context) {
 	}
 
 	response.Created(c, vol)
+}
+
+// DeleteVolume 删除存储卷
+func (ctrl *LibvirtController) DeleteVolume(c *gin.Context) {
+	identifier := c.Query("pool_identifier")
+	pool, err := storagePool.GetStoragePool(identifier)
+	if err != nil {
+		response.Abort500(c, err.Error())
+	}
+	volumeName := c.Query("volume_name")
+	if volumeName == "" {
+		response.Error(c, nil, "卷名称不能为空")
+		return
+	}
+	err = volume.DeleteVolume(pool, volumeName, 0)
+	if err != nil {
+		response.Error(c, err, "删除存储卷失败")
+		return
+	}
+
+	response.Success(c)
 }
