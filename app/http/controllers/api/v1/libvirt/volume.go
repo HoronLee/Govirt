@@ -98,6 +98,7 @@ func (ctrl *LibvirtController) CloneVolume(c *gin.Context) {
 		response.BadRequest(c, nil, "源卷名称不能为空")
 		return
 	}
+
 	spi := c.Query("source_pool_identifier")
 	dpi := c.DefaultQuery("destination_pool_identifier", spi)
 
@@ -111,7 +112,11 @@ func (ctrl *LibvirtController) CloneVolume(c *gin.Context) {
 		response.Abort500(c, err.Error())
 		return
 	}
-
+	svol, err := volume.GetVolume(spool, svn)
+	if err != nil {
+		response.BadRequest(c, nil, "源卷不存在")
+		return
+	}
 	// 解析请求参数
 	var params xmlDefine.VolumeTemplateParams
 	if err := c.ShouldBindJSON(&params); err != nil {
@@ -119,7 +124,8 @@ func (ctrl *LibvirtController) CloneVolume(c *gin.Context) {
 		return
 	}
 
-	vol, err := volume.CloneVolume(spool, svn, dpool, &params, 0)
+	// vol, err := volume.CloneVolume(spool, svn, dpool, &params, 0)
+	vol, err := volume.CloneVolume(dpool, &params, svol, 0)
 	if err != nil {
 		response.Error(c, err, "克隆存储卷失败")
 		return

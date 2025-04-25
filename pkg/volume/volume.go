@@ -76,24 +76,25 @@ func DeleteVolume(Pool libvirt.StoragePool, VolumeName string, Flags libvirt.Sto
 }
 
 // CloneVolume 从现有存储卷克隆创建新的存储卷
-// func CloneVolume(Pool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplateParams, SourceVol libvirt.StorageVol, Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
-// 	xmlDefine.SetDefaults(NewParams)
+func CloneVolume(Pool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplateParams, SourceVol libvirt.StorageVol, Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
+	xmlDefine.SetDefaults(NewParams)
 
-// 	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.VolumeTemplate, NewParams)
-// 	if err != nil {
-// 		return libvirt.StorageVol{}, fmt.Errorf("渲染XML失败: %w", err)
-// 	}
+	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.VolumeTemplate, NewParams)
+	if err != nil {
+		return libvirt.StorageVol{}, fmt.Errorf("渲染XML失败: %w", err)
+	}
 
-// 	vol, err = libvirtd.Connection.StorageVolCreateXMLFrom(Pool, xmlStr, SourceVol, Flags)
-// 	if err != nil {
-// 		return libvirt.StorageVol{}, fmt.Errorf("克隆卷失败: %w", err)
-// 	}
+	vol, err = libvirtd.Connection.StorageVolCreateXMLFrom(Pool, xmlStr, SourceVol, Flags)
+	if err != nil {
+		return libvirt.StorageVol{}, fmt.Errorf("克隆卷失败: %w", err)
+	}
 
-// 	return vol, nil
-// }
+	return vol, nil
+}
 
 // CloneVolume 克隆存储卷
-func CloneVolume(SourcePool libvirt.StoragePool, SourceVolName string,
+// 弃用的方法
+func CloneVolumeByPipe(SourcePool libvirt.StoragePool, SourceVolName string,
 	DestPool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplateParams,
 	Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
 	// 1. 获取源卷
