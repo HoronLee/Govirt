@@ -21,9 +21,9 @@ func GetVolume(Pool libvirt.StoragePool, VolumeName string) (vol libvirt.Storage
 // GetVolumeInfo 获取特定卷的详细信息
 func GetVolumeInfo(Pool libvirt.StoragePool, VolumeName string) (rType int8, rCapacity uint64, rAllocation uint64, err error) {
 	// 获取存储卷
-	vol, err := libvirtd.Connection.StorageVolLookupByName(Pool, VolumeName)
+	vol, err := GetVolume(Pool, VolumeName)
 	if err != nil {
-		return 0, 0, 0, fmt.Errorf("查找卷 %s 失败: %v", VolumeName, err)
+		return 0, 0, 0, err
 	}
 
 	// 获取卷信息

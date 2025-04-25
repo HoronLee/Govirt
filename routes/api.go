@@ -55,6 +55,7 @@ func RegisterAPIRoutes(r *gin.Engine) {
 					volumeGroup.GET("/allDetail", libc.ListVolumesDetails)
 					volumeGroup.POST("/create", libc.CreateVolume)
 					volumeGroup.DELETE("/delete", libc.DeleteVolume)
+					volumeGroup.POST("/clone", libc.CloneVolume)
 				}
 			}
 		}

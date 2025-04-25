@@ -32,9 +32,9 @@ const VolumeTemplate = `<volume>
 
 type VolumeTemplateParams struct {
 	Name             string // 卷名称
-	Capacity         int64  `default:"21474836480"` // 默认20G
-	Allocation       int64  `default:"0"`           // 默认不立刻分配卷
-	Type             string `default:"qcow2"`       // 卷格式 qcow2
+	Capacity         uint64
+	Allocation       int64  `default:"0"`     // 默认不立刻分配卷
+	Type             string `default:"qcow2"` // 卷格式 qcow2
 	BackingStorePath string // 卷的后备存储路径
 }
 
@@ -54,10 +54,10 @@ type NetworkTemplateParams struct {
 	Name        string // 网络名称
 	UUID        string // 网络UUID
 	DomainName  string // 域名，一般与Name相同
-	Autostart   bool   `default:"1"` // 是否自启动
-	ForwardMode string `default:"nat"`// 转发模式
+	Autostart   bool   `default:"1"`   // 是否自启动
+	ForwardMode string `default:"nat"` // 转发模式
 	IPAddress   string // IP地址
-	NetMask     string `default:"255.255.255.0"`// 子网掩码
+	NetMask     string `default:"255.255.255.0"` // 子网掩码
 	DhcpStart   string // DHCP起始地址
 	DhcpEnd     string // DHCP结束地址
 }

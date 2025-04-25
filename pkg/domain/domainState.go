@@ -54,11 +54,12 @@ func UpdateDomainStateByUUID(uuid libvirt.UUID, op DomainOperation, flags uint32
 	case DomainOpRestore:
 		err = fmt.Errorf("恢复操作暂未实现")
 	case DomainOpDelete:
-		if currentState != libvirt.DomainRunning {
-			err = DeleteDomain(domain, libvirt.DomainUndefineFlagsValues(flags))
-		} else {
-			err = fmt.Errorf("无法删除运行中的域")
+		if currentState == libvirt.DomainRunning {
+			if err = ForceStopDomain(domain); err != nil {
+				break
+			}
 		}
+		err = DeleteDomain(domain, libvirt.DomainUndefineFlagsValues(flags))
 	case DomainOpClone, DomainOpMigrate, DomainOpSnapshot:
 		err = fmt.Errorf("该操作暂未实现")
 	default:
