@@ -36,7 +36,7 @@ func (ctrl *LibvirtController) CreateNetwork(c *gin.Context) {
 	}
 
 	// 启动网络
-	if err := network.StartNetwork(nw); err != nil {
+	if err := network.ActiveNetwork(nw); err != nil {
 		response.Error(c, err, "启动网络失败")
 		return
 	}
@@ -58,6 +58,26 @@ func (ctrl *LibvirtController) DeleteNetwork(c *gin.Context) {
 	}
 	if err := network.DeleteNetwork(nw); err != nil {
 		response.Error(c, err, "删除网络失败")
+		return
+	}
+
+	response.Success(c)
+}
+
+// ActiveNetwork 启动网络
+func (ctrl *LibvirtController) ActiveNetwork(c *gin.Context) {
+	ni := c.Query("network_identifier")
+	if ni == "" {
+		response.Error(c, nil, "网络名称不能为空")
+		return
+	}
+	nw, err := network.GetNetwork(ni)
+	if err != nil {
+		response.Error(c, nil, "网络不存在")
+		return
+	}
+	if err := network.ActiveNetwork(nw); err != nil {
+		response.Error(c, err, "启动网络失败")
 		return
 	}
 

@@ -25,7 +25,7 @@ func InitSystemNetwork(params ...xmlDefine.NetworkTemplateParams) error {
 			if err != nil {
 				return fmt.Errorf("创建网络 %s 失败: %w", param.Name, err)
 			}
-			if err := StartNetwork(newNetwork); err != nil {
+			if err := ActiveNetwork(newNetwork); err != nil {
 				return fmt.Errorf("启动网络 %s 失败: %w", param.Name, err)
 			}
 			logger.InfoString("libvirt", "初始化网络", fmt.Sprintf("成功创建并启动网络 %s", param.Name))

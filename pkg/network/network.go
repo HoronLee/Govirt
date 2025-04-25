@@ -41,8 +41,8 @@ func CreateNetwork(params *xmlDefine.NetworkTemplateParams) (libvirt.Network, er
 	return network, nil
 }
 
-// StartNetwork 启动网络
-func StartNetwork(network libvirt.Network) error {
+// ActiveNetwork 启动网络
+func ActiveNetwork(network libvirt.Network) error {
 	if err := libvirtd.Connection.NetworkCreate(network); err != nil {
 		return fmt.Errorf("启动网络失败: %w", err)
 	}
