@@ -40,6 +40,8 @@ func RegisterAPIRoutes(r *gin.Engine) {
 				networkGroup := libGroup.Group("/network")
 				{
 					networkGroup.GET("/all", libc.ListAllNetworks)
+					networkGroup.POST("/createStart", libc.CreateNetwork)
+					networkGroup.DELETE("/stopDelete", libc.DeleteNetwork)
 				}
 				// storagePool 相关路由
 				poolGroup := libGroup.Group("/pool")

@@ -48,3 +48,14 @@ func StartNetwork(network libvirt.Network) error {
 	}
 	return nil
 }
+
+// DeleteNetwork 删除网络
+func DeleteNetwork(network libvirt.Network) error {
+	if err := libvirtd.Connection.NetworkDestroy(network); err != nil {
+		return fmt.Errorf("停止网络失败: %w", err)
+	}
+	if err := libvirtd.Connection.NetworkUndefine(network); err != nil {
+		return fmt.Errorf("删除网络失败: %w", err)
+	}
+	return nil
+}
