@@ -92,8 +92,7 @@ func CloneVolume(Pool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplatePa
 	return vol, nil
 }
 
-// CloneVolume 克隆存储卷
-// 弃用的方法
+// CloneVolume 克隆存储卷 弃用的方法
 func CloneVolumeByPipe(SourcePool libvirt.StoragePool, SourceVolName string,
 	DestPool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplateParams,
 	Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
@@ -131,7 +130,7 @@ func CloneVolumeByPipe(SourcePool libvirt.StoragePool, SourceVolName string,
 	return newVol, nil
 }
 
-// copyVolData 在两个卷之间复制数据
+// copyVolData 在两个卷之间复制数据 弃用的方法
 func copyVolData(sourceVol, destVol libvirt.StorageVol) error {
 	// 获取源卷的大小信息
 	_, capacity, _, err := libvirtd.Connection.StorageVolGetInfo(sourceVol)

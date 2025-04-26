@@ -12,6 +12,7 @@ import (
 
 // CreateATestDomain 创建一个测试虚拟机
 // 这是一个演示如何使用CreateDomain函数的示例
+// TODO: 实现创建domian的逻辑之前需要完成镜像管理
 func CreateATestDomain() {
 	// 创建模板参数结构体实例
 	// 只设置必要的参数，其他参数使用默认值
