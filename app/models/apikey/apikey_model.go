@@ -12,11 +12,12 @@ type Apikey struct {
 	models.CommonTimestampsField
 }
 
-func (apikeyModel *Apikey) Create() {
-	database.DB.Create(&apikeyModel)
+func (apikeyModel *Apikey) Create() error {
+	result := database.DB.Create(&apikeyModel)
+	return result.Error
 }
 
-func (apikeyModel *Apikey) Delete() int64 {
+func (apikeyModel *Apikey) Delete() (int64, error) {
 	result := database.DB.Delete(&apikeyModel)
-	return result.RowsAffected
+	return result.RowsAffected, result.Error
 }

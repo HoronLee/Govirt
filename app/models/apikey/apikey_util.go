@@ -5,14 +5,14 @@ import (
 	"govirt/pkg/hash"
 )
 
-func GetFromID(idstr string) (apikeyModel Apikey) {
-	database.DB.Where("id", idstr).First(&apikeyModel)
-	return
+func GetFromID(idstr string) (apikeyModel Apikey, err error) {
+	result := database.DB.Where("id", idstr).First(&apikeyModel)
+	return apikeyModel, result.Error
 }
 
-func GetFromName(namestr string) (apikeyModel Apikey) {
-	database.DB.Where("name", namestr).First(&apikeyModel)
-	return
+func GetFromName(namestr string) (apikeyModel Apikey, err error) {
+	result := database.DB.Where("name", namestr).First(&apikeyModel)
+	return apikeyModel, result.Error
 }
 func (apikeyModel *Apikey) CompareApikey(_key string) bool {
 	return hash.BcryptCheck(_key, apikeyModel.Key)

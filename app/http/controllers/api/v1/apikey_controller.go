@@ -58,13 +58,21 @@ func (ctrl *ApikeyController) CreateApikey(c *gin.Context) {
 }
 
 func (ctrl *ApikeyController) DeleteApikey(c *gin.Context) {
-	apikeyModel := apikey.GetFromName(c.Param("name"))
+	apikeyModel, err := apikey.GetFromName(c.Param("name"))
+	if err != nil {
+		response.Abort404(c)
+		return
+	}
 	if apikeyModel.ID == 0 {
 		response.Abort404(c)
 		return
 	}
 
-	rowsAffected := apikeyModel.Delete()
+	rowsAffected, err := apikeyModel.Delete()
+	if err != nil {
+		response.Abort500(c, "删除失败，请稍后尝试~")
+		return
+	}
 	if rowsAffected > 0 {
 		response.Success(c)
 	} else {
