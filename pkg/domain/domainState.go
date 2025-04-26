@@ -71,7 +71,7 @@ func UpdateDomainStateByUUID(uuid libvirt.UUID, op DomainOperation, flags uint32
 
 // ListAllDomains 列出所有域的信息
 func ListAllDomains() ([]libvirt.Domain, error) {
-	domains, _, err := libvirtd.Connection.ConnectListAllDomains(1, 1|2)
+	domains, _, err := libvirtd.Connection.ConnectListAllDomains(1, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "列出所有域失败", err.Error())
 		return nil, err

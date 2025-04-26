@@ -12,7 +12,7 @@ import (
 // ListAllStoragePools 列出所有存储池
 // 该函数返回所有存储池的列表，包括活动和非活动的存储池
 func ListAllStoragePools() ([]libvirt.StoragePool, error) {
-	pools, _, err := libvirtd.Connection.ConnectListAllStoragePools(1, libvirt.ConnectListStoragePoolsActive|libvirt.ConnectListStoragePoolsInactive)
+	pools, _, err := libvirtd.Connection.ConnectListAllStoragePools(1, 0)
 	if err != nil {
 		return nil, err
 	}

@@ -10,7 +10,7 @@ import (
 
 // ListAllNetworks 列出所有网络
 func ListAllNetworks() ([]libvirt.Network, error) {
-	networks, _, err := libvirtd.Connection.ConnectListAllNetworks(1, libvirt.ConnectListNetworksActive|libvirt.ConnectListNetworksInactive)
+	networks, _, err := libvirtd.Connection.ConnectListAllNetworks(1, 0)
 	if err != nil {
 		return nil, err
 	}
