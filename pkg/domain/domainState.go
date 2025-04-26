@@ -25,7 +25,7 @@ func UpdateDomainStateByUUID(uuid libvirt.UUID, op DomainOperation, flags uint32
 		}
 	case DomainOpShutdown:
 		if currentState == libvirt.DomainRunning {
-			err = ShutdownDomain(domain, libvirt.DomainShutdownFlagValues(flags))
+			err = ShutdownDomain(domain)
 		}
 	case DomainOpForceStop:
 		if currentState == libvirt.DomainRunning || currentState == libvirt.DomainPaused {
@@ -113,17 +113,9 @@ func StartDomain(domain libvirt.Domain) error {
 	return nil
 }
 
-// 枚举常量	                 	 值  作用
-// DomainShutdownDefault	    0	默认关机方式，由 hypervisor 自动选择合适的关机方式
-// DomainShutdownAcpiPowerBtn	1	模拟按下 ACPI 电源按钮，向虚拟机发送 ACPI 关机事件
-// DomainShutdownGuestAgent	    2	通过客户机代理(guest agent)关闭，前提是在虚拟机中安装了 guest agent
-// DomainShutdownInitctl		4	通过 initctl 机制关闭客户机，主要用于老的 Linux 系统
-// DomainShutdownSignal			8	发送信号（通常是 SIGTERM）给虚拟机的初始进程
-// DomainShutdownParavirt		16	使用半虚拟化关机接口，适用于支持半虚拟化的客户机
-
 // ShutdownDomain 正常关机
-func ShutdownDomain(domain libvirt.Domain, flags libvirt.DomainShutdownFlagValues) error {
-	err := libvirtd.Connection.DomainShutdownFlags(domain, flags)
+func ShutdownDomain(domain libvirt.Domain) error {
+	err := libvirtd.Connection.DomainShutdownFlags(domain, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "关闭域失败", err.Error())
 		return err
@@ -163,7 +155,7 @@ func ResumeDomain(domain libvirt.Domain) error {
 
 // RebootDomain 重启
 func RebootDomain(domain libvirt.Domain) error {
-	if err := ShutdownDomain(domain, 0); err != nil {
+	if err := ShutdownDomain(domain); err != nil {
 		return err
 	}
 	return StartDomain(domain)
