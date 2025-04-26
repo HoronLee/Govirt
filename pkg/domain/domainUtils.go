@@ -74,7 +74,7 @@ func DomainStateToString(state libvirt.DomainState) string {
 
 // GetDomain 根据 UUID 或名称获取域
 func GetDomain(identifier any) (libvirt.Domain, error) {
-	domains, err := ListAllDomains(-1, 1|2)
+	domains, err := ListAllDomains()
 	if err != nil {
 		logger.ErrorString("libvirt", "获取所有域失败", err.Error())
 		return libvirt.Domain{}, err

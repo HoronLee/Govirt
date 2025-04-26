@@ -54,12 +54,9 @@ func UpdateDomainStateByUUID(uuid libvirt.UUID, op DomainOperation, flags uint32
 	case DomainOpRestore:
 		err = fmt.Errorf("恢复操作暂未实现")
 	case DomainOpDelete:
-		if currentState == libvirt.DomainRunning {
-			if err = ForceStopDomain(domain); err != nil {
-				break
-			}
-		}
-		err = DeleteDomain(domain, libvirt.DomainUndefineFlagsValues(flags))
+		// 注意：这里调用 ForceDeleteDomain，因为它包含了停止逻辑
+		// 原来的 flags 参数在这里不再需要，因为 ForceDeleteDomain 内部处理了
+		err = ForceDeleteDomain(domain)
 	case DomainOpClone, DomainOpMigrate, DomainOpSnapshot:
 		err = fmt.Errorf("该操作暂未实现")
 	default:
@@ -73,8 +70,8 @@ func UpdateDomainStateByUUID(uuid libvirt.UUID, op DomainOperation, flags uint32
 }
 
 // ListAllDomains 列出所有域的信息
-func ListAllDomains(NeedResults int32, Flags libvirt.ConnectListAllDomainsFlags) ([]libvirt.Domain, error) {
-	domains, _, err := libvirtd.Connection.ConnectListAllDomains(NeedResults, Flags)
+func ListAllDomains() ([]libvirt.Domain, error) {
+	domains, _, err := libvirtd.Connection.ConnectListAllDomains(1, 1|2)
 	if err != nil {
 		logger.ErrorString("libvirt", "列出所有域失败", err.Error())
 		return nil, err
@@ -192,19 +189,66 @@ func SaveDomain(domain libvirt.Domain) error {
 	return nil
 }
 
-// DeleteDomain 删除指定的域
-// flags 为0时使用默认删除标志(删除快照元数据和NVRAM配置)
-func DeleteDomain(domain libvirt.Domain, flags libvirt.DomainUndefineFlagsValues) error {
-	// 如果未指定flags，使用默认删除标志
-	if flags == 0 {
-		flags = libvirt.DomainUndefineSnapshotsMetadata | libvirt.DomainUndefineNvram
+// ForceDeleteDomain 强制删除指定的域（会先强制停止）
+// 会删除快照元数据和NVRAM配置
+func ForceDeleteDomain(domain libvirt.Domain) error {
+	currentState, err := GetDomainState(domain)
+	if err != nil {
+		// 如果获取状态失败，仍然尝试删除定义，可能域已经损坏
+		logger.WarnString("libvirt", "获取域状态失败，仍尝试强制删除", err.Error())
+	} else {
+		// 如果域正在运行或暂停，则强制停止
+		if currentState == libvirt.DomainRunning || currentState == libvirt.DomainPaused {
+			logger.InfoString("libvirt", "域正在运行或暂停，执行强制停止", domain.Name)
+			if err := ForceStopDomain(domain); err != nil {
+				logger.ErrorString("libvirt", "强制停止域失败，无法继续删除", err.Error())
+				return fmt.Errorf("强制停止域失败: %w", err)
+			}
+			// 强制停止后需要一点时间让状态更新，或者依赖后续UndefineFlags能处理
+		}
 	}
 
-	err := libvirtd.Connection.DomainUndefineFlags(domain, flags)
+	// 使用包含快照和NVRAM的删除标志
+	flags := libvirt.DomainUndefineSnapshotsMetadata | libvirt.DomainUndefineNvram | libvirt.DomainUndefineManagedSave | libvirt.DomainUndefineCheckpointsMetadata
+	err = libvirtd.Connection.DomainUndefineFlags(domain, flags)
 	if err != nil {
-		logger.ErrorString("libvirt", "删除域失败", err.Error())
+		logger.ErrorString("libvirt", "强制删除域定义失败", err.Error())
 		return err
 	}
+	logger.InfoString("libvirt", "成功强制删除域", domain.Name)
+	return nil
+}
+
+// DeleteStoppedDomain 删除已停止的域
+// 会删除快照元数据和NVRAM配置
+func DeleteStoppedDomain(domain libvirt.Domain) error {
+	currentState, err := GetDomainState(domain)
+	if err != nil {
+		// 如果获取状态失败，也允许尝试删除，可能域已损坏
+		logger.WarnString("libvirt", "获取域状态失败，仍尝试删除已停止的域", err.Error())
+	} else {
+		// 检查域是否处于非运行状态
+		switch currentState {
+		case libvirt.DomainShutoff, libvirt.DomainShutdown, libvirt.DomainCrashed:
+			// 状态符合要求，继续执行删除
+		case libvirt.DomainRunning, libvirt.DomainPaused, libvirt.DomainBlocked, libvirt.DomainPmsuspended:
+			// 状态不符合要求，返回错误
+			err := fmt.Errorf("域 '%s' 处于活动状态 (%v)，无法删除，请先停止", domain.Name, currentState)
+			logger.ErrorString("libvirt", "删除已停止的域失败", err.Error())
+			return err
+		default: // DomainNostate 或其他未知状态
+			logger.WarnString("libvirt", fmt.Sprintf("域 '%s' 状态未知 (%v)，尝试删除", domain.Name, currentState), "")
+		}
+	}
+
+	// 使用包含快照和NVRAM的删除标志 (与原默认行为一致)
+	flags := libvirt.DomainUndefineSnapshotsMetadata | libvirt.DomainUndefineNvram
+	err = libvirtd.Connection.DomainUndefineFlags(domain, flags)
+	if err != nil {
+		logger.ErrorString("libvirt", "删除已停止的域定义失败", err.Error())
+		return err
+	}
+	logger.InfoString("libvirt", "成功删除已停止的域", domain.Name)
 	return nil
 }
 

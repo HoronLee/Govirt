@@ -35,6 +35,7 @@ func RegisterAPIRoutes(r *gin.Engine) {
 					domainGroup.GET("/all", libc.ListAllDomains)
 					domainGroup.GET("/state", libc.GetDomainStateByUUID)
 					domainGroup.PUT("/state", libc.UpdateDomainStateByUUID)
+					domainGroup.DELETE("/delete", libc.DeleteDomain)
 				}
 				// network 相关路由
 				networkGroup := libGroup.Group("/network")

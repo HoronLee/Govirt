@@ -1,11 +1,8 @@
 package libvirt
 
 import (
-	"fmt"
 	"govirt/pkg/helpers"
-	"govirt/pkg/logger"
 	"govirt/pkg/response"
-	"strconv"
 
 	"govirt/pkg/domain"
 
@@ -14,13 +11,7 @@ import (
 
 // ListAllDomains 列出所有域
 func (ctrl *LibvirtController) ListAllDomains(c *gin.Context) {
-	needResultInt, err := strconv.Atoi(c.DefaultQuery("needResults", "0"))
-	if err != nil {
-		logger.WarnString("libvirt", "ListAllDomains", fmt.Sprintf("resultNum转换失败: %s", err.Error()))
-		needResultInt = -1
-	}
-
-	domains, err := domain.ListAllDomains(int32(needResultInt), 0)
+	domains, err := domain.ListAllDomains()
 	if err != nil {
 		response.Error(c, err, "列出所有域失败")
 		return
@@ -57,4 +48,25 @@ func (ctrl *LibvirtController) UpdateDomainStateByUUID(c *gin.Context) {
 		return
 	}
 	response.Data(c, domain.DomainStateToString(presentState))
+}
+
+// DeleteDomain 删除指定域
+func (ctrl *LibvirtController) DeleteDomain(c *gin.Context) {
+	du, err := helpers.UUIDStringToBytes(c.Query("domain_uuid"))
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	dm, err := domain.GetDomain(du)
+	if err != nil {
+		response.Error(c, err, "获取域失败")
+		return
+	}
+
+	err = domain.DeleteStoppedDomain(dm)
+	if err != nil {
+		response.Error(c, err, "删除域失败")
+		return
+	}
+	response.Success(c)
 }
