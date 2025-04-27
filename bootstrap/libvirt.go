@@ -46,7 +46,7 @@ func InitLibvirt() {
 
 	// 检查是否有错误发生
 	for err := range errChan {
-		logger.FatalString("libvirt", err.Error(), "")
+		logger.FatalString("libvirt", "初始化libvirt", err.Error())
 	}
 
 	logger.InfoString("libvirt", "初始化Libvirt控制器", "成功")

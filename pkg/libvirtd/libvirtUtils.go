@@ -42,6 +42,7 @@ func ToStandardVersion(v uint64) string {
 // ServerInfo 宿主机信息结构体
 type ServerInfo struct {
 	HOST_NAME   string
+	HOST_UUID   string
 	CPU_CORE    string
 	MEMORY      string
 	LIB_VERSION string
@@ -52,7 +53,8 @@ type ServerInfo struct {
 func GetServerInfo() (*ServerInfo, error) {
 	info := &ServerInfo{}
 
-	info.HOST_NAME = config.GetString("libvirt.hostName")
+	info.HOST_NAME = config.Get("libvirt.hostName")
+	info.HOST_UUID = config.Get("libvirt.hostUUID")
 
 	// 获取版本
 	version, err := Connection.ConnectGetLibVersion()
