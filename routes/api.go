@@ -61,6 +61,12 @@ func RegisterAPIRoutes(r *gin.Engine) {
 					volumeGroup.DELETE("/delete", libc.DeleteVolume)
 					volumeGroup.POST("/clone", libc.CloneVolume)
 				}
+				// image 相关路由
+				imageGroup := libGroup.Group("/image")
+				{
+					imageGroup.POST("/create", libc.CreateImageFromLocalFile)
+					imageGroup.DELETE("/delete", libc.DeleteImage)
+				}
 			}
 		}
 	}

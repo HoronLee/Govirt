@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+	"math/rand"
 	"reflect"
 
 	"github.com/digitalocean/go-libvirt"
@@ -86,4 +87,19 @@ func FormatUUIDInStruct(obj any) map[string]any {
 	}
 
 	return result
+}
+
+// GenerateUUIDString 生成一个新的UUID字符串
+func GenerateUUIDString() string {
+	uuid := [16]byte{}
+	for i := range uuid {
+		uuid[i] = byte(rand.Intn(256))
+	}
+	return UUIDBytesToString(uuid[:])
+}
+
+// IsUUIDString 检查字符串是否为有效的UUID格式
+func IsUUIDString(uuidStr string) bool {
+	_, err := UUIDStringToBytes(uuidStr)
+	return err == nil
 }

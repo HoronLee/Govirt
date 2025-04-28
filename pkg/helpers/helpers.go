@@ -3,8 +3,10 @@ package helpers
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"io"
+	"os"
 
 	mathrand "math/rand"
 	"reflect"
@@ -76,4 +78,20 @@ func RandomString(length int) string {
 		b[i] = letters[rng.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+// CalculateChecksum 计算文件的校验和
+func CalculateChecksum(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, file); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
 }

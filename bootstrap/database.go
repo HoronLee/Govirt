@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"govirt/app/models/apikey"
+	"govirt/app/models/image"
 	"govirt/pkg/config"
 	"govirt/pkg/database"
 	"govirt/pkg/logger"
@@ -51,4 +52,5 @@ func SetupDB() {
 	database.SQLDB.SetConnMaxLifetime(time.Duration(config.GetInt("database.mysql.max_life_seconds")) * time.Second)
 	// 迁移 schema
 	database.DB.AutoMigrate(&apikey.Apikey{})
+	database.DB.AutoMigrate(&image.Image{})
 }

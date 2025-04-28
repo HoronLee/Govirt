@@ -114,7 +114,7 @@ func (ctrl *LibvirtController) CloneVolume(c *gin.Context) {
 	}
 	svol, err := volume.GetVolume(spool, svn)
 	if err != nil {
-		response.BadRequest(c, nil, "源卷不存在")
+		response.BadRequest(c, err, "源卷不存在")
 		return
 	}
 	// 解析请求参数

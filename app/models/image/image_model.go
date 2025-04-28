@@ -9,20 +9,20 @@ import (
 type Image struct {
 	models.BaseModel
 
-	Name        string
-	UUID        string
+	Name        string `gorm:"unique"`
+	UUID        string `gorm:"unique"`
 	Type        string
-	Size        int64
+	Size        uint64
+	OS          string
 	Arch        string
+	Source      string
 	Status      string
 	PoolName    string
 	VolumeName  string
 	Description string
-	Tags        string
 	Checksum    string
-	Source      string
-	MinDisk     int64
-	MinRam      int64
+	MinDisk     uint64
+	MinRam      uint64
 
 	models.CommonTimestampsField
 }
