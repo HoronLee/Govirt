@@ -10,15 +10,19 @@ import (
 )
 
 // ListVolumesSummary 列出存储池中的卷 简要信息
-func ListVolumesSummary(Pool libvirt.StoragePool, Maxnames int32) (rNames []string, err error) {
+func ListVolumesSummary(Pool libvirt.StoragePool) (rNames []string, err error) {
 	// 刷新存储池以确保获取最新信息
 	err = libvirtd.Connection.StoragePoolRefresh(Pool, 0)
 	if err != nil {
 		return nil, fmt.Errorf("刷新存储池失败: %v", err)
 	}
-
+	// 获取存储池中的卷数量
+	resultNum, err := GetVolumeNum(Pool)
+	if err != nil {
+		return nil, fmt.Errorf("获取存储池卷数量失败: %v", err)
+	}
 	// 获取存储池中的卷列表
-	volumes, err := libvirtd.Connection.StoragePoolListVolumes(Pool, Maxnames)
+	volumes, err := libvirtd.Connection.StoragePoolListVolumes(Pool, resultNum)
 	if err != nil {
 		return nil, fmt.Errorf("列出存储池中的卷失败: %v", err)
 	}

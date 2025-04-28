@@ -66,11 +66,7 @@ func SyncImagesWithVolumes(poolName string) error {
 	}
 
 	// 3. 获取存储池中所有卷
-	resultNum, err := volume.GetVolumeNum(pool)
-	if err != nil {
-		return fmt.Errorf("获取存储池卷数量失败: %v", err)
-	}
-	volumeNames, err := volume.ListVolumesSummary(pool, resultNum)
+	volumeNames, err := volume.ListVolumesSummary(pool)
 	if err != nil {
 		return fmt.Errorf("获取存储池中的卷列表失败: %v", err)
 	}

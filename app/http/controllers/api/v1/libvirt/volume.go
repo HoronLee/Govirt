@@ -18,12 +18,7 @@ func (ctrl *LibvirtController) ListVolumesSummary(c *gin.Context) {
 		return
 	}
 
-	resultNum, err := volume.GetVolumeNum(pool)
-	if err != nil {
-		response.Abort500(c, "Failed to get volume count: "+err.Error())
-		return
-	}
-	volumes, err := volume.ListVolumesSummary(pool, resultNum)
+	volumes, err := volume.ListVolumesSummary(pool)
 	if err != nil {
 		response.Abort500(c, "Failed to list volume summaries: "+err.Error())
 		return
