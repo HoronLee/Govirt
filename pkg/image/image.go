@@ -3,13 +3,11 @@ package image
 import (
 	"fmt"
 	imageMod "govirt/app/models/image"
-	"govirt/pkg/database"
 	"govirt/pkg/helpers"
 	"govirt/pkg/libvirtd"
 	"govirt/pkg/storagePool"
 	"govirt/pkg/volume"
 	"govirt/pkg/xmlDefine"
-	"image"
 	"os"
 )
 
@@ -54,7 +52,7 @@ func CreateImageFromLocalFile(name, sourceFilePath, poolName, osType, arch, imag
 
 	// 6. 生成UUID和Volume名称
 	uuid := helpers.GenerateUUIDString()
-	volumeName := fmt.Sprintf("%s_%s", name, uuid)
+	volumeName := fmt.Sprintf("%s_%s.%s", name, uuid, imageType)
 
 	// 7. 创建Image记录
 	image := &imageMod.Image{
@@ -186,31 +184,4 @@ func DeleteImage(idOrUUID string) error {
 	}
 
 	return nil
-}
-
-// GetImagePath 获取镜像对应的存储卷路径
-func GetImagePath(image *imageMod.Image) (string, error) {
-	pool, err := storagePool.GetStoragePool(image.PoolName)
-	if err != nil {
-		return "", fmt.Errorf("获取存储池失败: %v", err)
-	}
-
-	vol, err := volume.GetVolume(pool, image.VolumeName)
-	if err != nil {
-		return "", fmt.Errorf("获取卷失败: %v", err)
-	}
-
-	path, err := libvirtd.Connection.StorageVolGetPath(vol)
-	if err != nil {
-		return "", fmt.Errorf("获取卷路径失败: %v", err)
-	}
-
-	return path, nil
-}
-
-// ListActiveImages 列出所有活动状态的镜像
-func ListActiveImages() ([]image.Image, error) {
-	var images []image.Image
-	result := database.DB.Where("status = ?", StatusActive).Find(&images)
-	return images, result.Error
 }
