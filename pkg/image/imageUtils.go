@@ -51,6 +51,7 @@ func ListActiveImages(flag int) (any, error) {
 
 // SyncImagesWithVolumes 同步数据库中的镜像记录与实际存储卷
 // 如果数据库中有记录但存储卷不存在，则将镜像状态更新为deleted
+// 如果数据库中的记录状态为deleted但卷已经存在，则恢复状态为active
 // 不删除任何池中的卷
 func SyncImagesWithVolumes(poolName string) error {
 	// 1. 获取存储池
@@ -77,17 +78,27 @@ func SyncImagesWithVolumes(poolName string) error {
 		volumeMap[name] = true
 	}
 
-	// 5. 检查数据库中的镜像记录是否有对应的实际卷
-	// 如果没有，则更新状态为deleted
+	// 5. 检查数据库中的镜像记录与实际卷的对应关系
 	for i := range dbImages {
-		if dbImages[i].Status != StatusDeleted && !volumeMap[dbImages[i].VolumeName] {
-			// 镜像记录存在但卷不存在，更新状态为deleted
+		volumeExists := volumeMap[dbImages[i].VolumeName]
+
+		if dbImages[i].Status != StatusDeleted && !volumeExists {
+			// 镜像记录状态不是deleted但卷不存在，更新状态为deleted
 			dbImages[i].Status = StatusDeleted
 			if _, err := dbImages[i].Save(); err != nil {
 				logger.InfoString("image", "更新镜像信息", fmt.Sprintf("更新镜像 %s 状态失败: %v\n", dbImages[i].Name, err))
 				continue
 			}
 			logger.WarnString("image", "更新镜像信息", fmt.Sprintf("镜像 %s 的存储卷 %s 不存在，已将状态更新为deleted\n",
+				dbImages[i].Name, dbImages[i].VolumeName))
+		} else if dbImages[i].Status == StatusDeleted && volumeExists {
+			// 镜像记录状态是deleted但卷已存在，恢复状态为active
+			dbImages[i].Status = StatusActive
+			if _, err := dbImages[i].Save(); err != nil {
+				logger.InfoString("image", "更新镜像信息", fmt.Sprintf("更新镜像 %s 状态失败: %v\n", dbImages[i].Name, err))
+				continue
+			}
+			logger.InfoString("image", "更新镜像信息", fmt.Sprintf("镜像 %s 的存储卷 %s 已恢复，状态更新为active\n",
 				dbImages[i].Name, dbImages[i].VolumeName))
 		}
 	}
