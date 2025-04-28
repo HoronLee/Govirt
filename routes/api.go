@@ -66,6 +66,8 @@ func RegisterAPIRoutes(r *gin.Engine) {
 				{
 					imageGroup.POST("/create", libc.CreateImageFromLocalFile)
 					imageGroup.DELETE("/delete", libc.DeleteImage)
+					imageGroup.GET("/listActive", libc.ListActiveImages)
+					imageGroup.POST("/sync", libc.SyncImages)
 				}
 			}
 		}

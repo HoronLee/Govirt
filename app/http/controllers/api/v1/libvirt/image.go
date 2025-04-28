@@ -1,8 +1,10 @@
 package libvirt
 
 import (
+	"govirt/pkg/config"
 	"govirt/pkg/image"
 	"govirt/pkg/response"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,5 +60,31 @@ func (ctrl *LibvirtController) DeleteImage(c *gin.Context) {
 		return
 	}
 
+	response.Success(c)
+}
+
+func (ctrl *LibvirtController) ListActiveImages(c *gin.Context) {
+	flag := c.DefaultQuery("flag", "0")
+	flagInt, err := strconv.Atoi(flag)
+	if err != nil {
+		response.BadRequest(c, err, "flag参数无效")
+		return
+	}
+	images, err := image.ListActiveImages(flagInt)
+	if err != nil {
+		response.Error(c, err, "获取活动镜像失败")
+		return
+	}
+
+	response.Data(c, images)
+}
+
+func (ctrl *LibvirtController) SyncImages(c *gin.Context) {
+	pi := c.DefaultQuery("pool_identifier", config.Get("pool.image.name"))
+	err := image.SyncImagesWithVolumes(pi)
+	if err != nil {
+		response.Error(c, err, "同步镜像失败")
+		return
+	}
 	response.Success(c)
 }
