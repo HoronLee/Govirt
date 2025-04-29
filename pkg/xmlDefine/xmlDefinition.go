@@ -184,6 +184,7 @@ const DomainTemplate = `<domain type="kvm">
 
 // DomainTemplateParams 定义了虚拟机XML模板中的所有变量
 type DomainTemplateParams struct {
+	// 基本配置
 	Name        string `default:"vm"`
 	UUID        string // UUID，留空自动生成
 	Autostart   bool   `default:"1"`       // 是否自启动，默认自启动
@@ -221,4 +222,9 @@ type DomainTemplateParams struct {
 	VncPort       string `default:"-1"`  // 默认VNC端口
 	IsVncAutoPort string `default:"yes"` // 默认自动分配端口
 	VncPasswd     string `default:""`    // 默认无密码
+
+	// 外部设置
+	OsImageID   string // 镜像标识符，可以是名称或UUID
+	OsImageType string // 镜像类型，qcow2或raw
+	OsCapacity  uint64 // 系统盘容量，单位GB
 }

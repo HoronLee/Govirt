@@ -47,14 +47,14 @@ func (ctrl *LibvirtController) CreateImageFromLocalFile(c *gin.Context) {
 }
 
 func (ctrl *LibvirtController) DeleteImage(c *gin.Context) {
-	idOrUUID := c.Query("image_id")
+	ii := c.Query("image_identifier")
 
-	if idOrUUID == "" {
+	if ii == "" {
 		response.BadRequest(c, nil, "缺少镜像ID或UUID")
 		return
 	}
 
-	err := libvirtd.Conn.DeleteImage(idOrUUID)
+	err := libvirtd.Conn.DeleteImage(ii)
 	if err != nil {
 		response.Error(c, err, "删除镜像失败")
 		return

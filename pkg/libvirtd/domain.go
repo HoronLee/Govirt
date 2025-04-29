@@ -3,7 +3,10 @@ package libvirtd
 
 import (
 	"fmt"
+	"govirt/pkg/config"
 	"govirt/pkg/helpers"
+
+	imageMod "govirt/app/models/image"
 	"govirt/pkg/logger"
 	"govirt/pkg/xmlDefine"
 
@@ -17,81 +20,89 @@ func (vc *VirtConn) CreateATestDomain() {
 	// 创建模板参数结构体实例
 	// 只设置必要的参数，其他参数使用默认值
 	params := &xmlDefine.DomainTemplateParams{
-		Name:         "Rocky9.2",
-		BootDev:      "cdrom",
-		VCPU:         4,
-		CurrentMem:   2097152,
-		MaxMem:       2097152,
-		OsDiskSource: "/data/images/Rocky9.2Convert.qcow2",
-		CDRomSource:  "/data/images/Rocky-9.2-x86_64-minimal_174e5fe9-f573-96e3-aeeb-d40f4ab89bdf.iso",
+		Name: "Rocky9.2",
+		// BootDev:      "cdrom",
+		VCPU:       4,
+		CurrentMem: 2097152,
+		MaxMem:     2097152,
+		// OsDiskSource: "/data/images/Rocky9.2Convert.qcow2",
+		// CDRomSource:  "/data/images/Rocky-9.2-x86_64-minimal_174e5fe9-f573-96e3-aeeb-d40f4ab89bdf.iso",
+		OsImageID: "Rocky9.2-Convert",
 	}
-
-	// 测试代码
-	// 为所有未设置的字段应用默认值
-	xmlDefine.SetDefaults(params)
-
-	// 如果未提供MAC地址，则自动生成一个
-	if params.InterMac == "" {
-		macAddr, _ := helpers.GenerateRandomMAC()
-
-		params.InterMac = macAddr
-	}
-	if params.ExterMac == "" {
-		macAddr, err := helpers.GenerateRandomMAC()
-		if err != nil {
-			fmt.Printf("生成外部MAC地址失败: %w", err)
-			return
-		}
-
-		params.ExterMac = macAddr
-	}
-
-	// 渲染XML模板
-	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.DomainTemplate, params)
-	if err != nil {
-		fmt.Printf("渲染域XML失败: %w", err)
-		return
-	}
-	fmt.Printf("渲染后的XML: %s\n", xmlStr)
-	// 测试代码
 
 	// 调用正式的创建方法
-	// domain, err := vc.CreateDomain(params)
-	// if err != nil {
-	// 	logger.ErrorString("libvirt", "创建测试域失败", err.Error())
-	// 	return
-	// }
-
-	// fmt.Printf("测试域创建成功: %v\n", domain)
+	_, err := vc.CreateDomain(params)
+	if err != nil {
+		logger.ErrorString("libvirt", "创建测试域失败", err.Error())
+		return
+	}
 
 }
 
 // CreateDomain 根据提供的参数创建虚拟机
-func (vc *VirtConn) CreateDomain(params *xmlDefine.DomainTemplateParams) (libvirt.Domain, error) {
+// 目前只支持从qcow2镜像创建
+func (vc *VirtConn) CreateDomain(dparams *xmlDefine.DomainTemplateParams) (libvirt.Domain, error) {
+	// 获取镜像信息
+	ii := dparams.OsImageID
+	image, err := imageMod.GetByID(ii)
+	if err != nil {
+		return libvirt.Domain{}, fmt.Errorf("获取镜像失败: %w", err)
+	}
+	// 获取镜像所在存储池
+	imagePool, err := vc.GetStoragePool(image.PoolName)
+	if err != nil {
+		return libvirt.Domain{}, fmt.Errorf("获取镜像所在存储池失败: %w", err)
+	}
+	// 获取镜像所用存储卷
+	iv, err := vc.GetVolume(imagePool, image.VolumeName)
+	if err != nil {
+		return libvirt.Domain{}, fmt.Errorf("获取镜像所用存储卷失败: %w", err)
+	}
+	// 获取系统配置的系统盘专用存储池
+	osdp, err := vc.GetStoragePool(config.Get("pool.volume.name"))
+	if err != nil {
+		return libvirt.Domain{}, fmt.Errorf("获取系统盘目标存储池失败: %w", err)
+	}
+	// 系统盘定义
+	ovp := &xmlDefine.VolumeTemplateParams{
+		Name:     dparams.Name + ".qcow2",
+		Capacity: dparams.OsCapacity,
+	}
+	// 克隆
+	OsVolume, err := vc.CloneVolume(osdp, ovp, iv, 0)
+	if err != nil {
+		return libvirt.Domain{}, fmt.Errorf("克隆存储卷失败: %w", err)
+	}
+	// 设置系统盘的源卷
+	dparams.OsDiskSource = OsVolume.Key
+
 	// 为所有未设置的字段应用默认值
-	xmlDefine.SetDefaults(params)
+	xmlDefine.SetDefaults(dparams)
 
 	// 如果未提供MAC地址，则自动生成一个
-	if params.InterMac == "" {
+	if dparams.InterMac == "" {
 		macAddr, err := helpers.GenerateRandomMAC()
 		if err != nil {
 			return libvirt.Domain{}, fmt.Errorf("生成随机MAC地址失败: %w", err)
 		}
-		params.InterMac = macAddr
+		dparams.InterMac = macAddr
 	}
-	if params.ExterMac == "" {
+	if dparams.ExterMac == "" {
 		macAddr, err := helpers.GenerateRandomMAC()
 		if err != nil {
 			return libvirt.Domain{}, fmt.Errorf("生成随机MAC地址失败: %w", err)
 		}
-		params.ExterMac = macAddr
+		dparams.ExterMac = macAddr
 	}
 
 	// 渲染XML模板
-	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.DomainTemplate, params)
+	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.DomainTemplate, dparams)
 	if err != nil {
 		return libvirt.Domain{}, fmt.Errorf("渲染域XML失败: %w", err)
 	}
+
+	// fmt.Printf(xmlStr)
+	// return libvirt.Domain{}, err
 
 	// 定义域
 	domain, err := vc.Libvirt.DomainDefineXML(xmlStr)
@@ -249,20 +260,6 @@ func (vc *VirtConn) GetDomainState(domain libvirt.Domain) (libvirt.DomainState, 
 	return libvirt.DomainState(state), nil
 }
 
-// GetDomainStateByUUID 根据 UUID 获取域的状态
-func (vc *VirtConn) GetDomainStateByUUID(uuid libvirt.UUID) (libvirt.DomainState, error) {
-	domain, err := vc.GetDomain(uuid)
-	if err != nil {
-		return libvirt.DomainState(0), err
-	}
-	state, _, err := vc.Libvirt.DomainGetState(domain, 0)
-	if err != nil {
-		logger.ErrorString("libvirt", "获取域状态失败", err.Error())
-		return libvirt.DomainState(state), err
-	}
-	return libvirt.DomainState(state), nil
-}
-
 // StartDomain 开机
 func (vc *VirtConn) StartDomain(domain libvirt.Domain) error {
 	err := vc.Libvirt.DomainCreate(domain)
@@ -342,7 +339,6 @@ func (vc *VirtConn) SaveDomain(domain libvirt.Domain) error {
 }
 
 // ForceDeleteDomain 强制删除指定的域（会先强制停止）
-// 会删除快照元数据和NVRAM配置
 func (vc *VirtConn) ForceDeleteDomain(domain libvirt.Domain) error {
 	currentState, err := vc.GetDomainState(domain)
 	if err != nil {
@@ -372,7 +368,6 @@ func (vc *VirtConn) ForceDeleteDomain(domain libvirt.Domain) error {
 }
 
 // DeleteStoppedDomain 删除已停止的域
-// 会删除快照元数据和NVRAM配置
 func (vc *VirtConn) DeleteStoppedDomain(domain libvirt.Domain) error {
 	currentState, err := vc.GetDomainState(domain)
 	if err != nil {

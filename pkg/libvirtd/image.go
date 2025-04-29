@@ -180,19 +180,11 @@ func (vc *VirtConn) CreateImageFromURL(name, sourceURL, poolName, osType, arch, 
 }
 
 // DeleteImage 删除镜像及关联的存储卷
-func (vc *VirtConn) DeleteImage(idOrUUID string) error {
-	var image imageMod.Image
-	var err error
-
+func (vc *VirtConn) DeleteImage(identifier string) error {
 	// 1. 查找镜像记录
-	if helpers.IsUUIDString(idOrUUID) {
-		image, err = imageMod.GetByUUID(idOrUUID)
-	} else {
-		image, err = imageMod.Get(idOrUUID)
-	}
-
+	image, err := imageMod.GetByID(identifier)
 	if err != nil {
-		return fmt.Errorf("查找镜像失败: %v", err)
+		return err // 直接返回查找错误
 	}
 
 	// 2. 更新镜像状态为删除中

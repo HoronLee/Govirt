@@ -61,8 +61,10 @@ func RenderTemplate(templateStr string, data any) (string, error) {
 // 如果需要缓存已解析的模板以提高性能
 var templateCache = make(map[string]*template.Template)
 var commonTemplates = map[string]string{
-	"domain": DomainTemplate,
-	// "network": networkTemplate,
+	"domain":  DomainTemplate,
+	"network": NetworkTemplate,
+	"pool":    PoolTemplate,
+	"volume":  VolumeTemplate,
 	// 可以添加其他常用模板
 }
 
@@ -103,20 +105,19 @@ func RenderCachedTemplate(templateName string, data any) (string, error) {
 // 优先根据 config 标签从提供的 ConfigGetter 获取值，
 // 如果 config 标签不存在或获取失败，则根据 default 标签设置默认值。
 func SetDefaults(obj any) {
-	// 获取传入对象的反射值
-	v := reflect.ValueOf(obj).Elem()
-	t := v.Type()
+	v := reflect.ValueOf(obj).Elem() // 获取指针指向的值
+	t := v.Type()	// 结构体类型
 
 	// 遍历所有字段
 	for i := range t.NumField() {
-		field := t.Field(i)
-		fieldValue := v.Field(i)
+		field := t.Field(i)	// 获取字段信息
+		fieldValue := v.Field(i) // 获取字段值
 
 		// 只处理零值字段
 		if fieldValue.IsZero() {
 			configApplied := false
 			// 检查 config 标签
-			configKey := field.Tag.Get("config")
+			configKey := field.Tag.Get("config")	// 获取 config 标签
 			if configKey != "" {
 				configValue := config.Get(configKey)
 				// 假设 Get 返回非空字符串表示成功获取
