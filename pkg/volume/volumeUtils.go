@@ -10,7 +10,7 @@ import (
 // GetVolume 获取卷
 func GetVolume(Pool libvirt.StoragePool, VolumeName string) (vol libvirt.StorageVol, err error) {
 	// 获取存储卷
-	vol, err = libvirtd.Connection.StorageVolLookupByName(Pool, VolumeName)
+	vol, err = libvirtd.Conn.StorageVolLookupByName(Pool, VolumeName)
 	if err != nil {
 		return libvirt.StorageVol{}, fmt.Errorf("查找卷 %s 失败: %v", VolumeName, err)
 	}
@@ -27,7 +27,7 @@ func GetVolumeInfo(Pool libvirt.StoragePool, VolumeName string) (rType int8, rCa
 	}
 
 	// 获取卷信息
-	rType, rCapacity, rAllocation, err = libvirtd.Connection.StorageVolGetInfo(vol)
+	rType, rCapacity, rAllocation, err = libvirtd.Conn.StorageVolGetInfo(vol)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("获取卷 %s 信息失败: %v", VolumeName, err)
 	}
@@ -38,7 +38,7 @@ func GetVolumeInfo(Pool libvirt.StoragePool, VolumeName string) (rType int8, rCa
 // GetVolumeNum 获取存储池中的卷数量
 func GetVolumeNum(Pool libvirt.StoragePool) (rNum int32, err error) {
 	// 获取存储池中的卷数量
-	rNum, err = libvirtd.Connection.StoragePoolNumOfVolumes(Pool)
+	rNum, err = libvirtd.Conn.StoragePoolNumOfVolumes(Pool)
 	if err != nil {
 		return 0, fmt.Errorf("获取存储池 %s 中的卷数量失败: %v", Pool.Name, err)
 	}

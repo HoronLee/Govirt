@@ -1,6 +1,7 @@
 package image
 
 import (
+	"errors"
 	"fmt"
 	imageMod "govirt/app/models/image"
 	"govirt/pkg/database"
@@ -22,7 +23,7 @@ func GetImagePath(image *imageMod.Image) (string, error) {
 		return "", fmt.Errorf("获取卷失败: %v", err)
 	}
 
-	path, err := libvirtd.Connection.StorageVolGetPath(vol)
+	path, err := libvirtd.Conn.StorageVolGetPath(vol)
 	if err != nil {
 		return "", fmt.Errorf("获取卷路径失败: %v", err)
 	}
@@ -86,7 +87,7 @@ func SyncImagesWithVolumes(poolName string) error {
 			// 镜像记录状态不是deleted但卷不存在，更新状态为deleted
 			dbImages[i].Status = StatusDeleted
 			if _, err := dbImages[i].Save(); err != nil {
-				logger.InfoString("image", "更新镜像信息", fmt.Sprintf("更新镜像 %s 状态失败: %v\n", dbImages[i].Name, err))
+				logger.ErrorString("image", "更新镜像信息", fmt.Sprintf("更新镜像 %s 状态失败: %v\n", dbImages[i].Name, err))
 				continue
 			}
 			logger.WarnString("image", "更新镜像信息", fmt.Sprintf("镜像 %s 的存储卷 %s 不存在，已将状态更新为deleted\n",
@@ -95,7 +96,7 @@ func SyncImagesWithVolumes(poolName string) error {
 			// 镜像记录状态是deleted但卷已存在，恢复状态为active
 			dbImages[i].Status = StatusActive
 			if _, err := dbImages[i].Save(); err != nil {
-				logger.InfoString("image", "更新镜像信息", fmt.Sprintf("更新镜像 %s 状态失败: %v\n", dbImages[i].Name, err))
+				logger.ErrorString("image", "更新镜像信息", fmt.Sprintf("更新镜像 %s 状态失败: %v\n", dbImages[i].Name, err))
 				continue
 			}
 			logger.InfoString("image", "更新镜像信息", fmt.Sprintf("镜像 %s 的存储卷 %s 已恢复，状态更新为active\n",
@@ -128,7 +129,7 @@ func SyncAllImagesWithVolumes() error {
 		for _, err := range syncErrors {
 			errMsg += "- " + err.Error() + "\n"
 		}
-		return fmt.Errorf(errMsg)
+		return errors.New(errMsg)
 	}
 
 	return nil

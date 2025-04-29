@@ -62,7 +62,7 @@ func CreateDomain(params *xmlDefine.DomainTemplateParams) (libvirt.Domain, error
 	}
 
 	// 定义域
-	domain, err := libvirtd.Connection.DomainDefineXML(xmlStr)
+	domain, err := libvirtd.Conn.DomainDefineXML(xmlStr)
 	if err != nil {
 		return libvirt.Domain{}, fmt.Errorf("定义域失败: %w", err)
 	}
@@ -72,7 +72,7 @@ func CreateDomain(params *xmlDefine.DomainTemplateParams) (libvirt.Domain, error
 
 // GetDomainXMLDesc 获取指定域的XML描述
 func GetDomainXMLDesc(domain libvirt.Domain) (string, error) {
-	xmlDesc, err := libvirtd.Connection.DomainGetXMLDesc(domain, 0)
+	xmlDesc, err := libvirtd.Conn.DomainGetXMLDesc(domain, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "获取域XML描述失败", err.Error())
 		return "", err
@@ -82,7 +82,7 @@ func GetDomainXMLDesc(domain libvirt.Domain) (string, error) {
 
 // DefineDomain 定义域
 func DefineDomain(xmlDesc string) (libvirt.Domain, error) {
-	domain, err := libvirtd.Connection.DomainDefineXML(xmlDesc)
+	domain, err := libvirtd.Conn.DomainDefineXML(xmlDesc)
 	if err != nil {
 		return domain, err
 	}
@@ -92,7 +92,7 @@ func DefineDomain(xmlDesc string) (libvirt.Domain, error) {
 // UpdateDomain 更新已存在的域定义
 func UpdateDomain(domain libvirt.Domain, xmlDesc string) (libvirt.Domain, error) {
 	// libvirt.DomainDefineXMLFlags 用于更新域定义，第二个参数是flags，0表示默认行为
-	newDomain, err := libvirtd.Connection.DomainDefineXMLFlags(xmlDesc, 0)
+	newDomain, err := libvirtd.Conn.DomainDefineXMLFlags(xmlDesc, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "更新域定义失败", err.Error())
 		return libvirt.Domain{}, err

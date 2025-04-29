@@ -69,7 +69,7 @@ func SetNetworkAutostart(network libvirt.Network, autostart bool) error {
 		autostartFlag = 1
 	}
 
-	if err := libvirtd.Connection.NetworkSetAutostart(network, autostartFlag); err != nil {
+	if err := libvirtd.Conn.NetworkSetAutostart(network, autostartFlag); err != nil {
 		return fmt.Errorf("设置网络自动启动失败: %w", err)
 	}
 	return nil
@@ -77,7 +77,7 @@ func SetNetworkAutostart(network libvirt.Network, autostart bool) error {
 
 // GetNetworkAutostart 获取网络自动启动状态
 func GetNetworkAutostart(network libvirt.Network) (bool, error) {
-	autostart, err := libvirtd.Connection.NetworkGetAutostart(network)
+	autostart, err := libvirtd.Conn.NetworkGetAutostart(network)
 	if err != nil {
 		return false, fmt.Errorf("获取网络自动启动状态失败: %w", err)
 	}

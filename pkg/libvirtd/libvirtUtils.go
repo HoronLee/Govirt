@@ -10,11 +10,11 @@ import (
 )
 
 // GetConnection 获取全局单例连接
-func GetConnection() *VirtConnection {
-	if Connection == nil {
+func GetConnection() *VirtConn {
+	if Conn == nil {
 		panic("libvirt连接未初始化，请先调用InitConnection")
 	}
-	return Connection
+	return Conn
 }
 
 // CloseConnection 关闭连接
@@ -22,12 +22,12 @@ func CloseConnection() error {
 	connMutex.Lock()
 	defer connMutex.Unlock()
 
-	if Connection == nil {
+	if Conn == nil {
 		return nil
 	}
 
-	err := Connection.Disconnect()
-	Connection = nil
+	err := Conn.Disconnect()
+	Conn = nil
 	return err
 }
 
@@ -57,7 +57,7 @@ func GetServerInfo() (*ServerInfo, error) {
 	info.HOST_UUID = config.Get("libvirt.hostUUID")
 
 	// 获取版本
-	version, err := Connection.ConnectGetLibVersion()
+	version, err := Conn.ConnectGetLibVersion()
 	if err != nil {
 		logger.FatalString("libvirt", "获取libvirt版本失败", err.Error())
 		return nil, err

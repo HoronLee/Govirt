@@ -95,7 +95,7 @@ func CreateImageFromLocalFile(name, sourceFilePath, poolName, osType, arch, imag
 	file, err := os.Open(sourceFilePath)
 	if err != nil {
 		// 打开文件失败，删除卷并更新状态
-		libvirtd.Connection.StorageVolDelete(vol, 0)
+		libvirtd.Conn.StorageVolDelete(vol, 0)
 		image.Status = StatusError
 		image.Save()
 		return nil, fmt.Errorf("打开源文件失败: %v", err)
@@ -103,10 +103,10 @@ func CreateImageFromLocalFile(name, sourceFilePath, poolName, osType, arch, imag
 	defer file.Close()
 
 	// 上传文件到存储卷
-	err = libvirtd.Connection.StorageVolUpload(vol, file, 0, fileSize, 0)
+	err = libvirtd.Conn.StorageVolUpload(vol, file, 0, fileSize, 0)
 	if err != nil {
 		// 上传失败，删除卷并更新状态
-		libvirtd.Connection.StorageVolDelete(vol, 0)
+		libvirtd.Conn.StorageVolDelete(vol, 0)
 		image.Status = StatusError
 		image.Save()
 		return nil, fmt.Errorf("上传文件到存储卷失败: %v", err)

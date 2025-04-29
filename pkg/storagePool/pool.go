@@ -12,7 +12,7 @@ import (
 // ListAllStoragePools 列出所有存储池
 // 该函数返回所有存储池的列表，包括活动和非活动的存储池
 func ListAllStoragePools() ([]libvirt.StoragePool, error) {
-	pools, _, err := libvirtd.Connection.ConnectListAllStoragePools(1, 0)
+	pools, _, err := libvirtd.Conn.ConnectListAllStoragePools(1, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func CreateStoragePool(params *xmlDefine.PoolTemplateParams) (libvirt.StoragePoo
 	}
 
 	// 定义存储池
-	StoragePool, err := libvirtd.Connection.StoragePoolDefineXML(xmlStr, 0)
+	StoragePool, err := libvirtd.Conn.StoragePoolDefineXML(xmlStr, 0)
 	if err != nil {
 		return libvirt.StoragePool{}, fmt.Errorf("定义存储池失败: %w", err)
 	}
@@ -55,7 +55,7 @@ func CreateStoragePool(params *xmlDefine.PoolTemplateParams) (libvirt.StoragePoo
 
 // DeleteStoragePool 移除存储池(不删除数据)
 func DeleteStoragePool(pool libvirt.StoragePool) error {
-	if err := libvirtd.Connection.StoragePoolUndefine(pool); err != nil {
+	if err := libvirtd.Conn.StoragePoolUndefine(pool); err != nil {
 		return fmt.Errorf("移除存储池失败: %w", err)
 	}
 	return nil
@@ -63,7 +63,7 @@ func DeleteStoragePool(pool libvirt.StoragePool) error {
 
 // DropStoragePool 删除存储池(删除数据)
 func DropStoragePool(pool libvirt.StoragePool) error {
-	if err := libvirtd.Connection.StoragePoolDelete(pool, 0); err != nil {
+	if err := libvirtd.Conn.StoragePoolDelete(pool, 0); err != nil {
 		return fmt.Errorf("删除存储池失败: %w", err)
 	}
 	return nil
@@ -71,7 +71,7 @@ func DropStoragePool(pool libvirt.StoragePool) error {
 
 // StartStoragePool 启动存储池
 func StartStoragePool(pool libvirt.StoragePool) error {
-	if err := libvirtd.Connection.StoragePoolCreate(pool, 0); err != nil {
+	if err := libvirtd.Conn.StoragePoolCreate(pool, 0); err != nil {
 		return fmt.Errorf("启动存储池失败: %w", err)
 	}
 	return nil
@@ -79,7 +79,7 @@ func StartStoragePool(pool libvirt.StoragePool) error {
 
 // StopStoragePool 停止存储池
 func StopStoragePool(pool libvirt.StoragePool) error {
-	if err := libvirtd.Connection.StoragePoolDestroy(pool); err != nil {
+	if err := libvirtd.Conn.StoragePoolDestroy(pool); err != nil {
 		return fmt.Errorf("停止存储池失败: %w", err)
 	}
 	return nil
@@ -87,7 +87,7 @@ func StopStoragePool(pool libvirt.StoragePool) error {
 
 // RefreshStoragePool 刷新存储池
 func RefreshStoragePool(pool libvirt.StoragePool) error {
-	if err := libvirtd.Connection.StoragePoolRefresh(pool, 0); err != nil {
+	if err := libvirtd.Conn.StoragePoolRefresh(pool, 0); err != nil {
 		return fmt.Errorf("刷新存储池失败: %w", err)
 	}
 	return nil

@@ -10,7 +10,7 @@ import (
 
 // ListAllNetworks 列出所有网络
 func ListAllNetworks() ([]libvirt.Network, error) {
-	networks, _, err := libvirtd.Connection.ConnectListAllNetworks(1, 0)
+	networks, _, err := libvirtd.Conn.ConnectListAllNetworks(1, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func CreateNetwork(params *xmlDefine.NetworkTemplateParams) (libvirt.Network, er
 	}
 
 	// 定义网络
-	network, err := libvirtd.Connection.NetworkDefineXMLFlags(xmlStr, 0)
+	network, err := libvirtd.Conn.NetworkDefineXMLFlags(xmlStr, 0)
 	if err != nil {
 		return libvirt.Network{}, fmt.Errorf("定义存储池失败: %w", err)
 	}
@@ -43,7 +43,7 @@ func CreateNetwork(params *xmlDefine.NetworkTemplateParams) (libvirt.Network, er
 
 // ActiveNetwork 启动网络
 func ActiveNetwork(network libvirt.Network) error {
-	if err := libvirtd.Connection.NetworkCreate(network); err != nil {
+	if err := libvirtd.Conn.NetworkCreate(network); err != nil {
 		return fmt.Errorf("启动网络失败: %w", err)
 	}
 	return nil
@@ -51,10 +51,10 @@ func ActiveNetwork(network libvirt.Network) error {
 
 // DeleteNetwork 删除网络
 func DeleteNetwork(network libvirt.Network) error {
-	if err := libvirtd.Connection.NetworkDestroy(network); err != nil {
+	if err := libvirtd.Conn.NetworkDestroy(network); err != nil {
 		return fmt.Errorf("停止网络失败: %w", err)
 	}
-	if err := libvirtd.Connection.NetworkUndefine(network); err != nil {
+	if err := libvirtd.Conn.NetworkUndefine(network); err != nil {
 		return fmt.Errorf("删除网络失败: %w", err)
 	}
 	return nil

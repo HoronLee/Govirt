@@ -71,7 +71,7 @@ func UpdateDomainStateByUUID(uuid libvirt.UUID, op DomainOperation, flags uint32
 
 // ListAllDomains 列出所有域的信息
 func ListAllDomains() ([]libvirt.Domain, error) {
-	domains, _, err := libvirtd.Connection.ConnectListAllDomains(1, 0)
+	domains, _, err := libvirtd.Conn.ConnectListAllDomains(1, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "列出所有域失败", err.Error())
 		return nil, err
@@ -81,7 +81,7 @@ func ListAllDomains() ([]libvirt.Domain, error) {
 
 // GetDomainState 获取指定域的状态
 func GetDomainState(domain libvirt.Domain) (libvirt.DomainState, error) {
-	state, _, err := libvirtd.Connection.DomainGetState(domain, 0)
+	state, _, err := libvirtd.Conn.DomainGetState(domain, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "获取域状态失败", err.Error())
 		return libvirt.DomainState(state), err
@@ -95,7 +95,7 @@ func GetDomainStateByUUID(uuid libvirt.UUID) (libvirt.DomainState, error) {
 	if err != nil {
 		return libvirt.DomainState(0), err
 	}
-	state, _, err := libvirtd.Connection.DomainGetState(domain, 0)
+	state, _, err := libvirtd.Conn.DomainGetState(domain, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "获取域状态失败", err.Error())
 		return libvirt.DomainState(state), err
@@ -105,7 +105,7 @@ func GetDomainStateByUUID(uuid libvirt.UUID) (libvirt.DomainState, error) {
 
 // StartDomain 开机
 func StartDomain(domain libvirt.Domain) error {
-	err := libvirtd.Connection.DomainCreate(domain)
+	err := libvirtd.Conn.DomainCreate(domain)
 	if err != nil {
 		logger.ErrorString("libvirt", "启动域失败", err.Error())
 		return err
@@ -115,7 +115,7 @@ func StartDomain(domain libvirt.Domain) error {
 
 // ShutdownDomain 正常关机
 func ShutdownDomain(domain libvirt.Domain) error {
-	err := libvirtd.Connection.DomainShutdownFlags(domain, 0)
+	err := libvirtd.Conn.DomainShutdownFlags(domain, 0)
 	if err != nil {
 		logger.ErrorString("libvirt", "关闭域失败", err.Error())
 		return err
@@ -125,7 +125,7 @@ func ShutdownDomain(domain libvirt.Domain) error {
 
 // ForceStopDomain 强制关机
 func ForceStopDomain(domain libvirt.Domain) error {
-	err := libvirtd.Connection.DomainDestroyFlags(domain, libvirt.DomainDestroyDefault)
+	err := libvirtd.Conn.DomainDestroyFlags(domain, libvirt.DomainDestroyDefault)
 	if err != nil {
 		logger.ErrorString("libvirt", "强制停止域失败", err.Error())
 		return err
@@ -135,7 +135,7 @@ func ForceStopDomain(domain libvirt.Domain) error {
 
 // SuspendDomain 暂停
 func SuspendDomain(domain libvirt.Domain) error {
-	err := libvirtd.Connection.DomainSuspend(domain)
+	err := libvirtd.Conn.DomainSuspend(domain)
 	if err != nil {
 		logger.ErrorString("libvirt", "暂停域失败", err.Error())
 		return err
@@ -145,7 +145,7 @@ func SuspendDomain(domain libvirt.Domain) error {
 
 // ResumeDomain 恢复
 func ResumeDomain(domain libvirt.Domain) error {
-	err := libvirtd.Connection.DomainResume(domain)
+	err := libvirtd.Conn.DomainResume(domain)
 	if err != nil {
 		logger.ErrorString("libvirt", "恢复域失败", err.Error())
 		return err
@@ -173,7 +173,7 @@ func ForceRebootDomain(domain libvirt.Domain) error {
 func SaveDomain(domain libvirt.Domain) error {
 	// 自动生成保存路径：/var/lib/libvirt/save/<domain-name>.save
 	savePath := fmt.Sprintf("/var/lib/libvirt/save/%s.save", domain.Name)
-	err := libvirtd.Connection.DomainSave(domain, savePath)
+	err := libvirtd.Conn.DomainSave(domain, savePath)
 	if err != nil {
 		logger.ErrorString("libvirt", "保存域状态失败", err.Error())
 		return err
@@ -202,7 +202,7 @@ func ForceDeleteDomain(domain libvirt.Domain) error {
 
 	// 使用包含快照和NVRAM的删除标志
 	flags := libvirt.DomainUndefineSnapshotsMetadata | libvirt.DomainUndefineNvram | libvirt.DomainUndefineManagedSave | libvirt.DomainUndefineCheckpointsMetadata
-	err = libvirtd.Connection.DomainUndefineFlags(domain, flags)
+	err = libvirtd.Conn.DomainUndefineFlags(domain, flags)
 	if err != nil {
 		logger.ErrorString("libvirt", "强制删除域定义失败", err.Error())
 		return err
@@ -235,7 +235,7 @@ func DeleteStoppedDomain(domain libvirt.Domain) error {
 
 	// 使用包含快照和NVRAM的删除标志 (与原默认行为一致)
 	flags := libvirt.DomainUndefineSnapshotsMetadata | libvirt.DomainUndefineNvram
-	err = libvirtd.Connection.DomainUndefineFlags(domain, flags)
+	err = libvirtd.Conn.DomainUndefineFlags(domain, flags)
 	if err != nil {
 		logger.ErrorString("libvirt", "删除已停止的域定义失败", err.Error())
 		return err
@@ -251,7 +251,7 @@ func SetDomainAutostart(domain libvirt.Domain, autostart bool) error {
 		autostartFlag = 1
 	}
 
-	if err := libvirtd.Connection.DomainSetAutostart(domain, autostartFlag); err != nil {
+	if err := libvirtd.Conn.DomainSetAutostart(domain, autostartFlag); err != nil {
 		return fmt.Errorf("设置虚拟机自动启动失败: %w", err)
 	}
 	return nil
@@ -259,7 +259,7 @@ func SetDomainAutostart(domain libvirt.Domain, autostart bool) error {
 
 // GetDomainAutostart 获取虚拟机自动启动状态
 func GetDomainAutostart(domain libvirt.Domain) (bool, error) {
-	autostart, err := libvirtd.Connection.DomainGetAutostart(domain)
+	autostart, err := libvirtd.Conn.DomainGetAutostart(domain)
 	if err != nil {
 		return false, fmt.Errorf("获取虚拟机自动启动状态失败: %w", err)
 	}
