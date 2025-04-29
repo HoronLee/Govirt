@@ -1,8 +1,8 @@
-package volume
+// filepath: /home/horonlee/projects/govirt/pkg/libvirtd/volume.go
+package libvirtd
 
 import (
 	"fmt"
-	"govirt/pkg/libvirtd"
 	"govirt/pkg/xmlDefine"
 	"io"
 
@@ -10,19 +10,19 @@ import (
 )
 
 // ListVolumesSummary 列出存储池中的卷 简要信息
-func ListVolumesSummary(Pool libvirt.StoragePool) (rNames []string, err error) {
+func (vc *VirtConn) ListVolumesSummary(Pool libvirt.StoragePool) (rNames []string, err error) {
 	// 刷新存储池以确保获取最新信息
-	err = libvirtd.Conn.StoragePoolRefresh(Pool, 0)
+	err = vc.Libvirt.StoragePoolRefresh(Pool, 0)
 	if err != nil {
 		return nil, fmt.Errorf("刷新存储池失败: %v", err)
 	}
 	// 获取存储池中的卷数量
-	resultNum, err := GetVolumeNum(Pool)
+	resultNum, err := vc.GetVolumeNum(Pool)
 	if err != nil {
 		return nil, fmt.Errorf("获取存储池卷数量失败: %v", err)
 	}
 	// 获取存储池中的卷列表
-	volumes, err := libvirtd.Conn.StoragePoolListVolumes(Pool, resultNum)
+	volumes, err := vc.Libvirt.StoragePoolListVolumes(Pool, resultNum)
 	if err != nil {
 		return nil, fmt.Errorf("列出存储池中的卷失败: %v", err)
 	}
@@ -30,15 +30,15 @@ func ListVolumesSummary(Pool libvirt.StoragePool) (rNames []string, err error) {
 }
 
 // ListVolumesDetail 列出存储池中所有的卷 详细信息
-func ListVolumesDetails(Pool libvirt.StoragePool, Flags uint32) (vols []libvirt.StorageVol, rRet uint32, err error) {
+func (vc *VirtConn) ListVolumesDetails(Pool libvirt.StoragePool, Flags uint32) (vols []libvirt.StorageVol, rRet uint32, err error) {
 	// 刷新存储池以确保获取最新信息
-	err = libvirtd.Conn.StoragePoolRefresh(Pool, 0)
+	err = vc.Libvirt.StoragePoolRefresh(Pool, 0)
 	if err != nil {
 		return nil, 0, fmt.Errorf("刷新存储池失败: %v", err)
 	}
 
 	// 获取存储池中的卷列表
-	volumes, rRet, err := libvirtd.Conn.StoragePoolListAllVolumes(Pool, 1, Flags)
+	volumes, rRet, err := vc.Libvirt.StoragePoolListAllVolumes(Pool, 1, Flags)
 	if err != nil {
 		return nil, 0, fmt.Errorf("列出存储池中的卷失败: %v", err)
 	}
@@ -46,7 +46,7 @@ func ListVolumesDetails(Pool libvirt.StoragePool, Flags uint32) (vols []libvirt.
 }
 
 // CreateVolume 创建一个新的存储卷
-func CreateVolume(Pool libvirt.StoragePool, Params *xmlDefine.VolumeTemplateParams, Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
+func (vc *VirtConn) CreateVolume(Pool libvirt.StoragePool, Params *xmlDefine.VolumeTemplateParams, Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
 	xmlDefine.SetDefaults(Params)
 
 	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.VolumeTemplate, Params)
@@ -54,7 +54,7 @@ func CreateVolume(Pool libvirt.StoragePool, Params *xmlDefine.VolumeTemplatePara
 		return libvirt.StorageVol{}, fmt.Errorf("渲染XML失败: %w", err)
 	}
 
-	vol, err = libvirtd.Conn.StorageVolCreateXML(Pool, xmlStr, Flags)
+	vol, err = vc.Libvirt.StorageVolCreateXML(Pool, xmlStr, Flags)
 	if err != nil {
 		return libvirt.StorageVol{}, fmt.Errorf("定义卷失败: %w", err)
 	}
@@ -63,15 +63,15 @@ func CreateVolume(Pool libvirt.StoragePool, Params *xmlDefine.VolumeTemplatePara
 }
 
 // DeleteVolume 删除存储卷
-func DeleteVolume(Pool libvirt.StoragePool, VolumeName string, Flags libvirt.StorageVolDeleteFlags) (err error) {
+func (vc *VirtConn) DeleteVolume(Pool libvirt.StoragePool, VolumeName string, Flags libvirt.StorageVolDeleteFlags) (err error) {
 	// 获取存储卷
-	vol, err := GetVolume(Pool, VolumeName)
+	vol, err := vc.GetVolume(Pool, VolumeName)
 	if err != nil {
 		return fmt.Errorf("查找卷 %s 失败: %v", VolumeName, err)
 	}
 
 	// 删除存储卷
-	err = libvirtd.Conn.StorageVolDelete(vol, Flags)
+	err = vc.Libvirt.StorageVolDelete(vol, Flags)
 	if err != nil {
 		return fmt.Errorf("删除卷 %s 失败: %v", VolumeName, err)
 	}
@@ -80,7 +80,7 @@ func DeleteVolume(Pool libvirt.StoragePool, VolumeName string, Flags libvirt.Sto
 }
 
 // CloneVolume 从现有存储卷克隆创建新的存储卷
-func CloneVolume(Pool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplateParams, SourceVol libvirt.StorageVol, Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
+func (vc *VirtConn) CloneVolume(Pool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplateParams, SourceVol libvirt.StorageVol, Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
 	xmlDefine.SetDefaults(NewParams)
 
 	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.VolumeTemplate, NewParams)
@@ -88,7 +88,7 @@ func CloneVolume(Pool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplatePa
 		return libvirt.StorageVol{}, fmt.Errorf("渲染XML失败: %w", err)
 	}
 
-	vol, err = libvirtd.Conn.StorageVolCreateXMLFrom(Pool, xmlStr, SourceVol, Flags)
+	vol, err = vc.Libvirt.StorageVolCreateXMLFrom(Pool, xmlStr, SourceVol, Flags)
 	if err != nil {
 		return libvirt.StorageVol{}, fmt.Errorf("克隆卷失败: %w", err)
 	}
@@ -96,18 +96,18 @@ func CloneVolume(Pool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplatePa
 	return vol, nil
 }
 
-// CloneVolume 克隆存储卷 弃用的方法
-func CloneVolumeByPipe(SourcePool libvirt.StoragePool, SourceVolName string,
+// CloneVolumeByPipe 克隆存储卷 弃用的方法
+func (vc *VirtConn) CloneVolumeByPipe(SourcePool libvirt.StoragePool, SourceVolName string,
 	DestPool libvirt.StoragePool, NewParams *xmlDefine.VolumeTemplateParams,
 	Flags libvirt.StorageVolCreateFlags) (vol libvirt.StorageVol, err error) {
 	// 1. 获取源卷
-	sourceVol, err := GetVolume(SourcePool, SourceVolName)
+	sourceVol, err := vc.GetVolume(SourcePool, SourceVolName)
 	if err != nil {
 		return libvirt.StorageVol{}, fmt.Errorf("获取源卷失败: %w", err)
 	}
 
 	// 获取源卷信息
-	_, rCapacity, _, err := libvirtd.Conn.StorageVolGetInfo(sourceVol)
+	_, rCapacity, _, err := vc.Libvirt.StorageVolGetInfo(sourceVol)
 	if err != nil {
 		return libvirt.StorageVol{}, fmt.Errorf("获取源卷信息失败: %w", err)
 	}
@@ -118,16 +118,16 @@ func CloneVolumeByPipe(SourcePool libvirt.StoragePool, SourceVolName string,
 	}
 
 	// 在目标池中创建新卷
-	newVol, err := CreateVolume(DestPool, NewParams, Flags)
+	newVol, err := vc.CreateVolume(DestPool, NewParams, Flags)
 	if err != nil {
 		return libvirt.StorageVol{}, fmt.Errorf("在目标池中创建卷失败: %w", err)
 	}
 
 	// 复制源卷数据到新卷
-	err = copyVolData(sourceVol, newVol)
+	err = vc.copyVolData(sourceVol, newVol)
 	if err != nil {
 		// 如果复制失败，尝试删除目标卷
-		_ = libvirtd.Conn.StorageVolDelete(newVol, 0)
+		_ = vc.Libvirt.StorageVolDelete(newVol, 0)
 		return libvirt.StorageVol{}, fmt.Errorf("复制卷数据失败: %w", err)
 	}
 
@@ -135,9 +135,9 @@ func CloneVolumeByPipe(SourcePool libvirt.StoragePool, SourceVolName string,
 }
 
 // copyVolData 在两个卷之间复制数据 弃用的方法
-func copyVolData(sourceVol, destVol libvirt.StorageVol) error {
+func (vc *VirtConn) copyVolData(sourceVol, destVol libvirt.StorageVol) error {
 	// 获取源卷的大小信息
-	_, capacity, _, err := libvirtd.Conn.StorageVolGetInfo(sourceVol)
+	_, capacity, _, err := vc.Libvirt.StorageVolGetInfo(sourceVol)
 	if err != nil {
 		return fmt.Errorf("获取源卷信息失败: %w", err)
 	}
@@ -152,7 +152,7 @@ func copyVolData(sourceVol, destVol libvirt.StorageVol) error {
 	go func() {
 		defer pipeWriter.Close()
 		// StorageVolDownload 直接接收 Writer，将卷数据写入 pipeWriter
-		err := libvirtd.Conn.StorageVolDownload(sourceVol, pipeWriter, 0, capacity, 0)
+		err := vc.Libvirt.StorageVolDownload(sourceVol, pipeWriter, 0, capacity, 0)
 		errChan <- err
 	}()
 
@@ -160,7 +160,7 @@ func copyVolData(sourceVol, destVol libvirt.StorageVol) error {
 	go func() {
 		defer pipeReader.Close()
 		// StorageVolUpload 直接接收 Reader，从 pipeReader 读取数据
-		err := libvirtd.Conn.StorageVolUpload(destVol, pipeReader, 0, capacity, 0)
+		err := vc.Libvirt.StorageVolUpload(destVol, pipeReader, 0, capacity, 0)
 		errChan <- err
 	}()
 
@@ -177,4 +177,43 @@ func copyVolData(sourceVol, destVol libvirt.StorageVol) error {
 	}
 
 	return nil
+}
+
+// GetVolume 获取卷
+func (vc *VirtConn) GetVolume(Pool libvirt.StoragePool, VolumeName string) (vol libvirt.StorageVol, err error) {
+	// 获取存储卷
+	vol, err = vc.Libvirt.StorageVolLookupByName(Pool, VolumeName)
+	if err != nil {
+		return libvirt.StorageVol{}, fmt.Errorf("查找卷 %s 失败: %v", VolumeName, err)
+	}
+
+	return vol, nil
+}
+
+// GetVolumeInfo 获取特定卷的详细信息
+func (vc *VirtConn) GetVolumeInfo(Pool libvirt.StoragePool, VolumeName string) (rType int8, rCapacity uint64, rAllocation uint64, err error) {
+	// 获取存储卷
+	vol, err := vc.GetVolume(Pool, VolumeName)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	// 获取卷信息
+	rType, rCapacity, rAllocation, err = vc.Libvirt.StorageVolGetInfo(vol)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("获取卷 %s 信息失败: %v", VolumeName, err)
+	}
+
+	return
+}
+
+// GetVolumeNum 获取存储池中的卷数量
+func (vc *VirtConn) GetVolumeNum(Pool libvirt.StoragePool) (rNum int32, err error) {
+	// 获取存储池中的卷数量
+	rNum, err = vc.Libvirt.StoragePoolNumOfVolumes(Pool)
+	if err != nil {
+		return 0, fmt.Errorf("获取存储池 %s 中的卷数量失败: %v", Pool.Name, err)
+	}
+
+	return
 }

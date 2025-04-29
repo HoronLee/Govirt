@@ -19,6 +19,11 @@ func GetByUUID(uuid string) (image Image, err error) {
 	return image, result.Error
 }
 
+func GetByStatus(status string) (image Image, err error) {
+	result := database.DB.Where("status = ?", status).First(&image)
+	return image, result.Error
+}
+
 func All() (images []Image, err error) {
 	result := database.DB.Find(&images)
 	return images, result.Error

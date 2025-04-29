@@ -2,7 +2,7 @@ package libvirt
 
 import (
 	"govirt/pkg/helpers"
-	"govirt/pkg/network"
+	"govirt/pkg/libvirtd"
 	"govirt/pkg/response"
 	"govirt/pkg/xmlDefine"
 
@@ -11,7 +11,7 @@ import (
 
 // ListAllNetworks 列出所有网络
 func (ctrl *LibvirtController) ListAllNetworks(c *gin.Context) {
-	networks, err := network.ListAllNetworks()
+	networks, err := libvirtd.Conn.ListAllNetworks()
 	if err != nil {
 		response.Error(c, err, "列出所有网络失败")
 		return
@@ -29,14 +29,14 @@ func (ctrl *LibvirtController) CreateNetwork(c *gin.Context) {
 	}
 
 	// 创建网络
-	nw, err := network.CreateNetwork(&params)
+	nw, err := libvirtd.Conn.CreateNetwork(&params)
 	if err != nil {
 		response.Error(c, err, "创建网络失败")
 		return
 	}
 
 	// 启动网络
-	if err := network.ActiveNetwork(nw); err != nil {
+	if err := libvirtd.Conn.ActiveNetwork(nw); err != nil {
 		response.Error(c, err, "启动网络失败")
 		return
 	}
@@ -51,12 +51,12 @@ func (ctrl *LibvirtController) DeleteNetwork(c *gin.Context) {
 		response.Error(c, nil, "网络名称不能为空")
 		return
 	}
-	nw, err := network.GetNetwork(ni)
+	nw, err := libvirtd.Conn.GetNetwork(ni)
 	if err != nil {
 		response.Error(c, nil, "网络不存在")
 		return
 	}
-	if err := network.DeleteNetwork(nw); err != nil {
+	if err := libvirtd.Conn.DeleteNetwork(nw); err != nil {
 		response.Error(c, err, "删除网络失败")
 		return
 	}
@@ -71,12 +71,12 @@ func (ctrl *LibvirtController) ActiveNetwork(c *gin.Context) {
 		response.Error(c, nil, "网络名称不能为空")
 		return
 	}
-	nw, err := network.GetNetwork(ni)
+	nw, err := libvirtd.Conn.GetNetwork(ni)
 	if err != nil {
 		response.Error(c, nil, "网络不存在")
 		return
 	}
-	if err := network.ActiveNetwork(nw); err != nil {
+	if err := libvirtd.Conn.ActiveNetwork(nw); err != nil {
 		response.Error(c, err, "启动网络失败")
 		return
 	}

@@ -5,8 +5,6 @@ import (
 	"govirt/pkg/config"
 	"govirt/pkg/libvirtd"
 	"govirt/pkg/logger"
-	"govirt/pkg/network"
-	"govirt/pkg/storagePool"
 	"govirt/pkg/xmlDefine"
 	"sync"
 )
@@ -52,7 +50,7 @@ func InitLibvirt() {
 	logger.InfoString("libvirt", "初始化Libvirt控制器", "成功")
 }
 
-// InitStoragePool // InitStoragePool 初始化存储池
+// InitStoragePool 初始化存储池
 func InitStoragePool() error {
 	var poolParams []xmlDefine.PoolTemplateParams
 	// 定义需要初始化的存储池
@@ -71,7 +69,7 @@ func InitStoragePool() error {
 	}
 
 	// 批量初始化存储池
-	return storagePool.InitSystemStoragePool(poolParams...)
+	return libvirtd.Conn.InitSystemStoragePool(poolParams...)
 }
 
 func InitNetwork() error {
@@ -108,5 +106,5 @@ func InitNetwork() error {
 		networkParams = append(networkParams, param)
 	}
 
-	return network.InitSystemNetwork(networkParams...)
+	return libvirtd.Conn.InitSystemNetwork(networkParams...)
 }

@@ -1,13 +1,8 @@
-package domain
+package libvirtd
 
-import (
-	"fmt"
-	"govirt/pkg/logger"
+import "github.com/digitalocean/go-libvirt"
 
-	"github.com/digitalocean/go-libvirt"
-)
-
-// DomainOperation 定义DomainOperation类型
+// 定义DomainOperation类型
 type DomainOperation int32
 
 // 定义DomainOperation常量
@@ -70,30 +65,4 @@ func DomainStateToString(state libvirt.DomainState) string {
 		return str
 	}
 	return "Unknown"
-}
-
-// GetDomain 根据 UUID 或名称获取域
-func GetDomain(identifier any) (libvirt.Domain, error) {
-	domains, err := ListAllDomains()
-	if err != nil {
-		logger.ErrorString("libvirt", "获取所有域失败", err.Error())
-		return libvirt.Domain{}, err
-	}
-
-	for _, domain := range domains {
-		switch id := identifier.(type) {
-		case libvirt.UUID:
-			if domain.UUID == id {
-				return domain, nil
-			}
-		case string:
-			if domain.Name == id {
-				return domain, nil
-			}
-		default:
-			return libvirt.Domain{}, fmt.Errorf("无效的标识符类型: %T", identifier)
-		}
-	}
-
-	return libvirt.Domain{}, nil
 }

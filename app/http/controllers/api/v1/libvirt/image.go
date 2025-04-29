@@ -2,7 +2,7 @@ package libvirt
 
 import (
 	"govirt/pkg/config"
-	"govirt/pkg/image"
+	"govirt/pkg/libvirtd"
 	"govirt/pkg/response"
 	"strconv"
 
@@ -27,7 +27,7 @@ func (ctrl *LibvirtController) CreateImageFromLocalFile(c *gin.Context) {
 		return
 	}
 
-	image, err := image.CreateImageFromLocalFile(
+	image, err := libvirtd.Conn.CreateImageFromLocalFile(
 		req.Name,
 		req.SourceFilePath,
 		req.PoolName,
@@ -54,7 +54,7 @@ func (ctrl *LibvirtController) DeleteImage(c *gin.Context) {
 		return
 	}
 
-	err := image.DeleteImage(idOrUUID)
+	err := libvirtd.Conn.DeleteImage(idOrUUID)
 	if err != nil {
 		response.Error(c, err, "删除镜像失败")
 		return
@@ -70,7 +70,7 @@ func (ctrl *LibvirtController) ListActiveImages(c *gin.Context) {
 		response.BadRequest(c, err, "flag参数无效")
 		return
 	}
-	images, err := image.ListActiveImages(flagInt)
+	images, err := libvirtd.Conn.ListActiveImages(flagInt)
 	if err != nil {
 		response.Error(c, err, "获取活动镜像失败")
 		return
@@ -81,7 +81,7 @@ func (ctrl *LibvirtController) ListActiveImages(c *gin.Context) {
 
 func (ctrl *LibvirtController) SyncImages(c *gin.Context) {
 	pi := c.DefaultQuery("pool_identifier", config.Get("pool.image.name"))
-	err := image.SyncImagesWithVolumes(pi)
+	err := libvirtd.Conn.SyncImagesWithVolumes(pi)
 	if err != nil {
 		response.Error(c, err, "同步镜像失败")
 		return
