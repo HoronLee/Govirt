@@ -48,6 +48,7 @@ func InitLibvirt() {
 	}
 
 	logger.InfoString("libvirt", "初始化Libvirt控制器", "成功")
+	// libvirtd.Conn.CreateATestDomain()
 }
 
 // InitStoragePool 初始化存储池

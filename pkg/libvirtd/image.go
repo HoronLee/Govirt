@@ -11,6 +11,8 @@ import (
 	"govirt/pkg/xmlDefine"
 	"os"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 // 定义镜像状态常量
@@ -23,6 +25,7 @@ const (
 )
 
 // CreateImageFromLocalFile 从本地文件创建镜像
+// 如果存在同名且状态为 error 的镜像，则尝试覆盖更新
 func (vc *VirtConn) CreateImageFromLocalFile(name, sourceFilePath, poolName, osType, arch, imageType, description string, minDisk, minRam uint64) (*imageMod.Image, error) {
 	// 1. 基本检查
 	if name == "" || sourceFilePath == "" || poolName == "" {
@@ -30,106 +33,141 @@ func (vc *VirtConn) CreateImageFromLocalFile(name, sourceFilePath, poolName, osT
 	}
 
 	// 2. 检查源文件是否存在
-	if _, err := os.Stat(sourceFilePath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("源文件不存在: %v", err)
+	fileInfo, err := os.Stat(sourceFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("源文件不存在: %s", sourceFilePath)
+		}
+		return nil, fmt.Errorf("检查源文件时出错: %v", err)
 	}
 
 	// 3. 获取文件大小
-	fileInfo, err := os.Stat(sourceFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("获取源文件信息失败: %v", err)
-	}
 	fileSize := uint64(fileInfo.Size())
 
 	// 4. 检查是否已存在同名镜像
-	if imageMod.IsExist("name", name) {
-		return nil, fmt.Errorf("已存在同名镜像: %s", name)
+	var image *imageMod.Image
+	var existingVolumeName string // 用于记录可能存在的旧卷名
+	err = database.DB.Where("name = ?", name).First(&image).Error
+	if err == nil {
+		// 找到了同名镜像
+		if image.Status == ImageStatusError {
+			logger.WarnString("image", "创建镜像", fmt.Sprintf("找到同名(%s)且状态为error的镜像记录(UUID: %s)，将尝试覆盖更新。", name, image.UUID))
+			// 记录旧的卷名，以便后续可能清理
+			existingVolumeName = image.VolumeName
+			// 更新记录信息，准备重试
+			image.Type = imageType
+			image.Size = fileSize
+			image.OS = osType
+			image.Arch = arch
+			image.Source = sourceFilePath // 更新源路径
+			image.PoolName = poolName
+			image.Description = description
+			image.MinDisk = minDisk
+			image.MinRam = minRam
+			// 重新生成 UUID 和 VolumeName，避免与可能残留的旧卷冲突
+			image.UUID = helpers.GenerateUUIDString()
+			image.VolumeName = fmt.Sprintf("%s_%s.%s", name, image.UUID, imageType)
+			image.Status = ImageStatusCreating // 重置状态为创建中
+			image.Checksum = ""                // 清除旧的校验和
+			if _, err := image.Save(); err != nil {
+				return nil, fmt.Errorf("更新错误状态镜像记录失败: %v", err)
+			}
+		} else {
+			// 如果镜像存在且状态不是 error，则不允许覆盖
+			return nil, fmt.Errorf("已存在同名镜像(%s)，状态为 %s", name, image.Status)
+		}
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		// 未找到同名镜像，创建新的记录
+		image = &imageMod.Image{
+			Name:        name,
+			UUID:        helpers.GenerateUUIDString(),
+			Type:        imageType,
+			Size:        fileSize,
+			OS:          osType,
+			Arch:        arch,
+			Source:      sourceFilePath,
+			Status:      ImageStatusCreating,
+			PoolName:    poolName,
+			VolumeName:  fmt.Sprintf("%s_%s.%s", name, helpers.GenerateUUIDString(), imageType),
+			Description: description,
+			MinDisk:     minDisk,
+			MinRam:      minRam,
+		}
+		// 8. 保存到数据库
+		if _, err := image.Create(); err != nil {
+			return nil, fmt.Errorf("创建新镜像记录失败: %v", err)
+		}
+	} else {
+		// 查询数据库时发生其他错误
+		return nil, fmt.Errorf("查找同名镜像时出错: %v", err)
 	}
 
 	// 5. 获取存储池
 	pool, err := vc.GetStoragePool(poolName)
 	if err != nil {
+		image.Status = ImageStatusError
+		image.Save() // 尝试保存错误状态
 		return nil, fmt.Errorf("获取存储池失败: %v", err)
 	}
 
-	// 6. 生成UUID和Volume名称
-	uuid := helpers.GenerateUUIDString()
-	volumeName := fmt.Sprintf("%s_%s.%s", name, uuid, imageType)
-
-	// 7. 创建Image记录
-	image := &imageMod.Image{
-		Name:        name,
-		UUID:        uuid,
-		Type:        imageType,
-		Size:        fileSize,
-		OS:          osType,
-		Arch:        arch,
-		Source:      sourceFilePath,
-		Status:      ImageStatusCreating,
-		PoolName:    poolName,
-		VolumeName:  volumeName,
-		Description: description,
-		MinDisk:     minDisk,
-		MinRam:      minRam,
+	// 清理可能存在的旧卷 (如果是在覆盖更新 error 状态的镜像)
+	if existingVolumeName != "" && existingVolumeName != image.VolumeName {
+		logger.InfoString("image", "创建镜像", fmt.Sprintf("尝试删除与旧记录关联的卷: %s", existingVolumeName))
+		_ = vc.DeleteVolume(pool, existingVolumeName, 0)
 	}
 
-	// 8. 保存到数据库
-	if _, err := image.Create(); err != nil {
-		return nil, fmt.Errorf("创建镜像记录失败: %v", err)
-	}
-
-	// 9. 创建存储卷
+	// 9. 创建新的存储卷
 	volParams := &xmlDefine.VolumeTemplateParams{
-		Name:     volumeName,
-		Capacity: minDisk,
-		Type:     imageType,
+		Name:     image.VolumeName,
+		Capacity: image.MinDisk,
+		Type:     image.Type,
 	}
-
 	vol, err := vc.CreateVolume(pool, volParams, 0)
 	if err != nil {
-		// 创建卷失败，更新状态并返回错误
 		image.Status = ImageStatusError
 		image.Save()
-		return nil, fmt.Errorf("创建存储卷失败: %v", err)
+		return nil, fmt.Errorf("创建存储卷 %s 失败: %v", image.VolumeName, err)
 	}
 
-	// 10. 上传文件到存储卷
+	// 10. 上传文件到存储卷 (由于前面已检查文件存在，这里 os.Open 理论上不应失败，但保留检查)
 	file, err := os.Open(sourceFilePath)
 	if err != nil {
-		// 打开文件失败，删除卷并更新状态
-		vc.Libvirt.StorageVolDelete(vol, 0)
+		_ = vc.Libvirt.StorageVolDelete(vol, 0)
 		image.Status = ImageStatusError
 		image.Save()
+		// 理论上不应发生，因为前面 Stat 成功了
+		logger.ErrorString("image", "创建镜像", fmt.Sprintf("打开已确认存在的源文件 %s 失败: %v", sourceFilePath, err))
 		return nil, fmt.Errorf("打开源文件失败: %v", err)
 	}
 	defer file.Close()
 
 	// 上传文件到存储卷
-	err = vc.Libvirt.StorageVolUpload(vol, file, 0, fileSize, 0)
+	err = vc.Libvirt.StorageVolUpload(vol, file, 0, image.Size, 0)
 	if err != nil {
-		// 上传失败，删除卷并更新状态
-		vc.Libvirt.StorageVolDelete(vol, 0)
+		_ = vc.Libvirt.StorageVolDelete(vol, 0)
 		image.Status = ImageStatusError
 		image.Save()
-		return nil, fmt.Errorf("上传文件到存储卷失败: %v", err)
+		return nil, fmt.Errorf("上传文件到存储卷 %s 失败: %v", image.VolumeName, err)
 	}
 
 	// 11. 生成校验和
 	checksum, err := helpers.CalculateChecksum(sourceFilePath)
 	if err != nil {
-		// 校验和计算失败，记录错误但继续
-		fmt.Printf("计算校验和失败，但会继续: %v\n", err)
+		logger.ErrorString("image", "创建镜像", fmt.Sprintf("计算镜像 %s 的校验和失败: %v", image.Name, err))
 	} else {
 		image.Checksum = checksum
-		image.Save()
 	}
 
 	// 12. 更新状态为活动状态
 	image.Status = ImageStatusActive
 	if _, err := image.Save(); err != nil {
-		return nil, fmt.Errorf("更新镜像状态失败: %v", err)
+		// 状态更新失败，但资源已创建，标记为错误状态可能更合适？
+		// 或者至少返回错误，让调用者知道数据库状态可能不一致
+		// 这里暂时保持返回错误
+		return nil, fmt.Errorf("更新镜像 %s 最终状态为 active 失败: %v", image.Name, err)
 	}
 
+	logger.InfoString("image", "创建镜像", fmt.Sprintf("镜像 %s (UUID: %s) 创建成功并激活。", image.Name, image.UUID))
 	return image, nil
 }
 

@@ -100,7 +100,6 @@ const DomainTemplate = `<domain type="kvm">
       <driver name="qemu" type="qcow2" discard="unmap"/>
       <source file='{{.OsDiskSource}}'/>
       <target dev="vda" bus="virtio"/>
-      <address type="pci" domain="0x0000" bus="0x04" slot="0x00" function="0x0"/>
       <iotune>
         <read_bytes_sec>{{.OsDiskRrate}}</read_bytes_sec>    <!-- 1MB/s = 1048576 字节/秒 -->
         <write_bytes_sec>{{.OsDiskWrate}}</write_bytes_sec>
@@ -114,7 +113,6 @@ const DomainTemplate = `<domain type="kvm">
       <driver name="qemu" type="qcow2" discard="unmap"/>
       <source file='{{.DataDiskSource}}'/>
       <target dev="vdb" bus="virtio"/>
-      <address type="pci" domain="0x0000" bus="0x09" slot="0x00" function="0x0"/>
       <iotune>
         <read_bytes_sec>{{.DataDiskRrate}}</read_bytes_sec>
         <write_bytes_sec>{{.DataDiskWrate}}</write_bytes_sec>
@@ -135,21 +133,22 @@ const DomainTemplate = `<domain type="kvm">
     {{end}}
     <!-- 控制器，待研究哪些是必须的，以及其中的关系 -->
     <controller type="usb" index="0" model="qemu-xhci" ports="15">
-      <address type="pci" domain="0x0000" bus="0x02" slot="0x00" function="0x0"/>
     </controller>
     <controller type="pci" index="0" model="pcie-root"/>
     <controller type="sata" index="0">
-      <address type="pci" domain="0x0000" bus="0x00" slot="0x1f" function="0x2"/>
     </controller>
     <controller type="virtio-serial" index="0">
-      <address type="pci" domain="0x0000" bus="0x03" slot="0x00" function="0x0"/>
     </controller>
     <!-- 网卡 -->
     <interface type="network">
-      <mac address='{{.NatMac}}'/>
-      <source network="default"/>  <!-- 默认NAT -->
+      <source network="{{.ExterName}}"/>
+      <mac address='{{.ExterMac}}'/>
       <model type="virtio"/>
-      <address type="pci" domain="0x0000" bus="0x07" slot="0x00" function="0x0"/>
+    </interface>
+    <interface type="network">
+      <source network="{{.InterName}}"/>
+      <mac address='{{.InterMac}}'/>
+      <model type="virtio"/>
     </interface>
     <serial type="pty">
       <target type="isa-serial" port="0">
@@ -175,14 +174,13 @@ const DomainTemplate = `<domain type="kvm">
     </video>
     <watchdog model="itco" action="reset"/>
     <memballoon model="virtio">
-      <address type="pci" domain="0x0000" bus="0x05" slot="0x00" function="0x0"/>
     </memballoon>
     <rng model="virtio">
       <backend model="random">/dev/urandom</backend>
-      <address type="pci" domain="0x0000" bus="0x06" slot="0x00" function="0x0"/>
     </rng>
   </devices>
-</domain>`
+</domain>
+`
 
 // DomainTemplateParams 定义了虚拟机XML模板中的所有变量
 type DomainTemplateParams struct {
@@ -204,17 +202,20 @@ type DomainTemplateParams struct {
 	OsDiskWIOPS  int64  `default:"1000"`      // 默认1000 IOPS
 
 	// 数据盘配置
-	DataDiskSource string `default:""`          // 必须提供
-	DataDiskRrate  int64  `default:"104857600"` // 默认100MB/s
-	DataDiskWrate  int64  `default:"104857600"` // 默认100MB/s
-	DataDiskRIOPS  int64  `default:"1000"`      // 默认1000 IOPS
-	DataDiskWIOPS  int64  `default:"1000"`      // 默认1000 IOPS
+	DataDiskSource string
+	DataDiskRrate  int64 `default:"104857600"` // 默认100MB/s
+	DataDiskWrate  int64 `default:"104857600"` // 默认100MB/s
+	DataDiskRIOPS  int64 `default:"1000"`      // 默认1000 IOPS
+	DataDiskWIOPS  int64 `default:"1000"`      // 默认1000 IOPS
 
 	// CDROM配置
 	CDRomSource string // 不设默认值，可为空
 
 	// 网络配置
-	NatMac string // 留空自动生成
+	ExterName string `config:"network.external.name"` // 外网网卡名称，必需
+	ExterMac  string // 留空自动生成
+	InterName string `config:"network.internal.name"` // 内网网卡名称，必需
+	InterMac  string // 留空自动生成
 
 	// VNC配置
 	VncPort       string `default:"-1"`  // 默认VNC端口

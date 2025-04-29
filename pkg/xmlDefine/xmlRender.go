@@ -3,6 +3,7 @@ package xmlDefine
 import (
 	"bytes"
 	"fmt"
+	"govirt/pkg/config"
 	"reflect"
 	"strconv"
 	"text/template"
@@ -98,14 +99,9 @@ func RenderCachedTemplate(templateName string, data any) (string, error) {
 	return buf.String(), nil
 }
 
-// RenderDomainXML 渲染虚拟机域定义的XML
-// 这是一个针对DomainTemplateParams的便捷包装函数
-func RenderDomainXML(params any) (string, error) {
-	return RenderTemplate(DomainTemplate, params)
-}
-
 // SetDefaults 为结构体设置默认值
-// 根据结构体标签中的default值来设置字段的默认值
+// 优先根据 config 标签从提供的 ConfigGetter 获取值，
+// 如果 config 标签不存在或获取失败，则根据 default 标签设置默认值。
 func SetDefaults(obj any) {
 	// 获取传入对象的反射值
 	v := reflect.ValueOf(obj).Elem()
@@ -116,35 +112,50 @@ func SetDefaults(obj any) {
 		field := t.Field(i)
 		fieldValue := v.Field(i)
 
-		// 如果字段是零值，并且有默认值标签，则设置默认值
+		// 只处理零值字段
 		if fieldValue.IsZero() {
-			defaultValue := field.Tag.Get("default")
-			if defaultValue != "" {
-				setDefaultByType(fieldValue, defaultValue)
+			configApplied := false
+			// 检查 config 标签
+			configKey := field.Tag.Get("config")
+			if configKey != "" {
+				configValue := config.Get(configKey)
+				// 假设 Get 返回非空字符串表示成功获取
+				if configValue != "" {
+					setDefaultByType(fieldValue, configValue)
+					configApplied = true
+				}
+			}
+
+			// 如果没有应用 config 值，则检查 default 标签
+			if !configApplied {
+				defaultValue := field.Tag.Get("default")
+				if defaultValue != "" {
+					setDefaultByType(fieldValue, defaultValue)
+				}
 			}
 		}
 	}
 }
 
 // setDefaultByType 根据字段类型设置默认值
-func setDefaultByType(fieldValue reflect.Value, defaultValue string) {
+func setDefaultByType(fieldValue reflect.Value, value string) {
 	switch fieldValue.Kind() {
 	case reflect.String:
-		fieldValue.SetString(defaultValue)
+		fieldValue.SetString(value)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		if val, err := strconv.ParseInt(defaultValue, 10, 64); err == nil {
+		if val, err := strconv.ParseInt(value, 10, 64); err == nil {
 			fieldValue.SetInt(val)
-		}
+		} // 可以在此处添加错误处理或日志记录
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		if val, err := strconv.ParseUint(defaultValue, 10, 64); err == nil {
+		if val, err := strconv.ParseUint(value, 10, 64); err == nil {
 			fieldValue.SetUint(val)
 		}
 	case reflect.Float32, reflect.Float64:
-		if val, err := strconv.ParseFloat(defaultValue, 64); err == nil {
+		if val, err := strconv.ParseFloat(value, 64); err == nil {
 			fieldValue.SetFloat(val)
 		}
 	case reflect.Bool:
-		if val, err := strconv.ParseBool(defaultValue); err == nil {
+		if val, err := strconv.ParseBool(value); err == nil {
 			fieldValue.SetBool(val)
 		}
 	}

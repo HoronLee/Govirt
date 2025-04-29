@@ -17,28 +17,53 @@ func (vc *VirtConn) CreateATestDomain() {
 	// 创建模板参数结构体实例
 	// 只设置必要的参数，其他参数使用默认值
 	params := &xmlDefine.DomainTemplateParams{
-		Name: "test",
-		// BootDev:      "cdrom",
-		OsDiskSource: "/data/images/rocky9.qcow2",
-		// CDRomSource:  "/data/images/Rocky-9.2-x86_64-minimal.iso",
+		Name:         "Rocky9.2",
+		BootDev:      "cdrom",
+		VCPU:         4,
+		CurrentMem:   2097152,
+		MaxMem:       2097152,
+		OsDiskSource: "/data/images/Rocky9.2Convert.qcow2",
+		CDRomSource:  "/data/images/Rocky-9.2-x86_64-minimal_174e5fe9-f573-96e3-aeeb-d40f4ab89bdf.iso",
 	}
 
-	// 调用正式的创建方法
-	domain, err := vc.CreateDomain(params)
+	// 测试代码
+	// 为所有未设置的字段应用默认值
+	xmlDefine.SetDefaults(params)
+
+	// 如果未提供MAC地址，则自动生成一个
+	if params.InterMac == "" {
+		macAddr, _ := helpers.GenerateRandomMAC()
+
+		params.InterMac = macAddr
+	}
+	if params.ExterMac == "" {
+		macAddr, err := helpers.GenerateRandomMAC()
+		if err != nil {
+			fmt.Printf("生成外部MAC地址失败: %w", err)
+			return
+		}
+
+		params.ExterMac = macAddr
+	}
+
+	// 渲染XML模板
+	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.DomainTemplate, params)
 	if err != nil {
-		logger.ErrorString("libvirt", "创建测试域失败", err.Error())
+		fmt.Printf("渲染域XML失败: %w", err)
 		return
 	}
+	fmt.Printf("渲染后的XML: %s\n", xmlStr)
+	// 测试代码
 
-	fmt.Printf("测试域创建成功: %v\n", domain.Name)
+	// 调用正式的创建方法
+	// domain, err := vc.CreateDomain(params)
+	// if err != nil {
+	// 	logger.ErrorString("libvirt", "创建测试域失败", err.Error())
+	// 	return
+	// }
 
-	// 输出完整参数，展示默认值被正确应用
-	fmt.Printf("名称: %s\n", params.Name)
-	fmt.Printf("UUID: %s\n", params.UUID)
-	fmt.Printf("内存: %d KiB\n", params.MaxMem)
-	fmt.Printf("当前内存: %d KiB\n", params.CurrentMem)
-	fmt.Printf("VCPU: %d\n", params.VCPU)
-	fmt.Printf("MAC地址: %s\n", params.NatMac)
+	// fmt.Printf("测试域创建成功: %v\n", domain)
+
 }
 
 // CreateDomain 根据提供的参数创建虚拟机
@@ -47,12 +72,19 @@ func (vc *VirtConn) CreateDomain(params *xmlDefine.DomainTemplateParams) (libvir
 	xmlDefine.SetDefaults(params)
 
 	// 如果未提供MAC地址，则自动生成一个
-	if params.NatMac == "" {
+	if params.InterMac == "" {
 		macAddr, err := helpers.GenerateRandomMAC()
 		if err != nil {
 			return libvirt.Domain{}, fmt.Errorf("生成随机MAC地址失败: %w", err)
 		}
-		params.NatMac = macAddr
+		params.InterMac = macAddr
+	}
+	if params.ExterMac == "" {
+		macAddr, err := helpers.GenerateRandomMAC()
+		if err != nil {
+			return libvirt.Domain{}, fmt.Errorf("生成随机MAC地址失败: %w", err)
+		}
+		params.ExterMac = macAddr
 	}
 
 	// 渲染XML模板
