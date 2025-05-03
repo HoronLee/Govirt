@@ -31,7 +31,7 @@ func (vc *VirtConn) CreateATestDomain() {
 	}
 
 	// 调用正式的创建方法
-	_, err := vc.CreateDomain(params)
+	_, err := vc.CreateDomainFromImage(params)
 	if err != nil {
 		logger.ErrorString("libvirt", "创建测试域失败", err.Error())
 		return
@@ -39,77 +39,76 @@ func (vc *VirtConn) CreateATestDomain() {
 
 }
 
-// CreateDomain 根据提供的参数创建虚拟机
-// 目前只支持从qcow2镜像创建
-func (vc *VirtConn) CreateDomain(dparams *xmlDefine.DomainTemplateParams) (libvirt.Domain, error) {
-	// 获取镜像信息
-	ii := dparams.OsImageID
-	image, err := imageMod.GetByID(ii)
-	if err != nil {
-		return libvirt.Domain{}, fmt.Errorf("获取镜像失败: %w", err)
+// CreateDomainFromImage 根据提供的参数从现有镜像克隆创建虚拟机
+func (vc *VirtConn) CreateDomainFromImage(dparams *xmlDefine.DomainTemplateParams) (libvirt.Domain, error) {
+	if dparams.OsImageID == "" {
+		return libvirt.Domain{}, fmt.Errorf("必须提供 OsImageID 以便从镜像创建")
 	}
-	// 获取镜像所在存储池
+
+	// --- 获取并检查基础镜像信息 ---
+	imageID := dparams.OsImageID
+	image, err := imageMod.GetByID(imageID)
+	if err != nil {
+		return libvirt.Domain{}, fmt.Errorf("获取基础镜像失败: %w", err)
+	}
+	if image.Status != "active" {
+		return libvirt.Domain{}, fmt.Errorf("基础镜像 '%s' 状态为 '%s'，不是 active 状态", image.Name, image.Status)
+	}
 	imagePool, err := vc.GetStoragePool(image.PoolName)
 	if err != nil {
-		return libvirt.Domain{}, fmt.Errorf("获取镜像所在存储池失败: %w", err)
+		return libvirt.Domain{}, fmt.Errorf("获取基础镜像所在存储池失败: %w", err)
 	}
-	// 获取镜像所用存储卷
-	iv, err := vc.GetVolume(imagePool, image.VolumeName)
+	baseVolume, err := vc.GetVolume(imagePool, image.VolumeName)
 	if err != nil {
-		return libvirt.Domain{}, fmt.Errorf("获取镜像所用存储卷失败: %w", err)
+		return libvirt.Domain{}, fmt.Errorf("获取基础镜像存储卷失败: %w", err)
 	}
-	// 获取系统配置的系统盘专用存储池
-	osdp, err := vc.GetStoragePool(config.Get("pool.volume.name"))
+
+	// --- 克隆卷作为新虚拟机的系统盘 ---
+	osDiskPoolName := config.Get("pool.volume.name") // 系统盘目标存储池
+	osDiskPool, err := vc.GetStoragePool(osDiskPoolName)
 	if err != nil {
-		return libvirt.Domain{}, fmt.Errorf("获取系统盘目标存储池失败: %w", err)
+		return libvirt.Domain{}, fmt.Errorf("获取系统盘目标存储池 '%s' 失败: %w", osDiskPoolName, err)
 	}
-	// 系统盘定义
-	ovp := &xmlDefine.VolumeTemplateParams{
+	// 定义新系统盘卷的参数
+	osVolParams := &xmlDefine.VolumeTemplateParams{
 		Name:     dparams.Name + ".qcow2",
-		Capacity: dparams.OsCapacity,
+		Capacity: dparams.OsCapacity, // 注意：克隆时容量通常由基础卷决定，除非CloneVolume支持调整
+		Type:     "qcow2",
 	}
-	// 克隆
-	OsVolume, err := vc.CloneVolume(osdp, ovp, iv, 0)
+	// 执行克隆
+	osVolume, err := vc.CloneVolume(osDiskPool, osVolParams, baseVolume, 0) // flags=0
 	if err != nil {
-		return libvirt.Domain{}, fmt.Errorf("克隆存储卷失败: %w", err)
+		return libvirt.Domain{}, fmt.Errorf("克隆基础镜像卷失败: %w", err)
 	}
-	// 设置系统盘的源卷
-	dparams.OsDiskSource = OsVolume.Key
+	// 设置系统盘源为新克隆的卷
+	dparams.OsDiskSource = osVolume.Key // 使用克隆后卷的Key或Path
 
-	// 为所有未设置的字段应用默认值
-	xmlDefine.SetDefaults(dparams)
+	xmlDefine.SetDefaults(dparams) // 应用默认值
 
-	// 如果未提供MAC地址，则自动生成一个
-	if dparams.InterMac == "" {
-		macAddr, err := helpers.GenerateRandomMAC()
-		if err != nil {
-			return libvirt.Domain{}, fmt.Errorf("生成随机MAC地址失败: %w", err)
-		}
-		dparams.InterMac = macAddr
-	}
-	if dparams.ExterMac == "" {
-		macAddr, err := helpers.GenerateRandomMAC()
-		if err != nil {
-			return libvirt.Domain{}, fmt.Errorf("生成随机MAC地址失败: %w", err)
-		}
-		dparams.ExterMac = macAddr
+	// 生成MAC地址
+	if err := vc.ensureMacAddresses(dparams); err != nil {
+		// 如果生成MAC失败，可能需要清理已克隆的卷
+		_ = vc.DeleteVolume(osDiskPool, osVolume.Name, 0) // 尝试清理
+		return libvirt.Domain{}, err
 	}
 
 	// 渲染XML模板
 	xmlStr, err := xmlDefine.RenderTemplate(xmlDefine.DomainTemplate, dparams)
 	if err != nil {
+		// 清理已克隆的卷
+		_ = vc.DeleteVolume(osDiskPool, osVolume.Name, 0) // 尝试清理
 		return libvirt.Domain{}, fmt.Errorf("渲染域XML失败: %w", err)
 	}
 
-	// fmt.Printf(xmlStr)
-	// return libvirt.Domain{}, err
-
-	// 定义域
+	// --- 定义域 ---
 	domain, err := vc.Libvirt.DomainDefineXML(xmlStr)
 	if err != nil {
+		// 清理已克隆的卷
+		_ = vc.DeleteVolume(osDiskPool, osVolume.Name, 0) // 尝试清理
 		return libvirt.Domain{}, fmt.Errorf("定义域失败: %w", err)
 	}
 
+	logger.InfoString("libvirt", "成功从镜像定义域", dparams.Name)
 	return domain, nil
 }
 

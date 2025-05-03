@@ -224,7 +224,8 @@ type DomainTemplateParams struct {
 	VncPasswd     string `default:""`    // 默认无密码
 
 	// 外部设置
-	OsImageID   string // 镜像标识符，可以是名称或UUID
-	OsImageType string // 镜像类型，qcow2或raw
-	OsCapacity  uint64 // 系统盘容量，单位GB
+	OsImageID      string // 镜像标识符，可以是名称或UUID
+	OsImageType    string // 镜像类型，qcow2或iso
+	OsCapacity     uint64 // 系统盘容量，单位GB
+	DataDiskFormat string `default:"qcow2"` // 镜像格式，qcow2或raw
 }

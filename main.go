@@ -5,7 +5,7 @@ import (
 	"govirt/app/cmd"
 	"govirt/app/cmd/make"
 	"govirt/bootstrap"
-	btsConig "govirt/config"
+	btsConfig "govirt/config"
 	"govirt/pkg/config"
 	"govirt/pkg/console"
 	"os"
@@ -15,7 +15,7 @@ import (
 
 func init() {
 	// 加载 config 目录下的配置信息
-	btsConig.Initialize()
+	btsConfig.Initialize()
 }
 
 func main() {

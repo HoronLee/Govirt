@@ -1,6 +1,12 @@
 package libvirtd
 
-import "github.com/digitalocean/go-libvirt"
+import (
+	"fmt"
+	"govirt/pkg/helpers"
+	"govirt/pkg/xmlDefine"
+
+	"github.com/digitalocean/go-libvirt"
+)
 
 // 定义DomainOperation类型
 type DomainOperation int32
@@ -65,4 +71,23 @@ func DomainStateToString(state libvirt.DomainState) string {
 		return str
 	}
 	return "Unknown"
+}
+
+// ensureMacAddresses 确保 DomainTemplateParams 中的 MAC 地址已设置，如果未设置则生成
+func (vc *VirtConn) ensureMacAddresses(dparams *xmlDefine.DomainTemplateParams) error {
+	if dparams.InterMac == "" {
+		macAddr, err := helpers.GenerateRandomMAC()
+		if err != nil {
+			return fmt.Errorf("生成内部网络MAC地址失败: %w", err)
+		}
+		dparams.InterMac = macAddr
+	}
+	if dparams.ExterMac == "" {
+		macAddr, err := helpers.GenerateRandomMAC()
+		if err != nil {
+			return fmt.Errorf("生成外部网络MAC地址失败: %w", err)
+		}
+		dparams.ExterMac = macAddr
+	}
+	return nil
 }
